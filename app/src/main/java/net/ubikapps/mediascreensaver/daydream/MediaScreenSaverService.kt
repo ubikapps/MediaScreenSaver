@@ -8,6 +8,7 @@ import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.os.SystemClock
 import android.service.dreams.DreamService
 import android.text.format.DateFormat
 import android.util.Log
@@ -18,12 +19,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +53,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -124,51 +131,47 @@ class MediaScreenSaverService : DreamService(), LifecycleOwner, SavedStateRegist
 
 @Composable
 fun ScreenSaverContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth().padding(32.dp)
-        ) {
-            DigitalClock()
-            Spacer(modifier = Modifier.height(48.dp))
-            MediaInfoDisplay()
-        }
-    }
-}
-
-@Composable
-fun DigitalClock() {
-    var timeText by remember { mutableStateOf("") }
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val context = LocalContext.current
+    val isPreview = LocalInspectionMode.current
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            val calendar = Calendar.getInstance()
-            timeText = DateFormat.getTimeFormat(context).format(calendar.time)
-            delay(1000)
-        }
+    // --- State Hoisting ---
+    
+    // Dummy data for preview
+    val dummyBitmap = remember(isPreview) {
+        if (isPreview) {
+            Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888).apply {
+                eraseColor(android.graphics.Color.GRAY)
+            }
+        } else null
     }
 
-    Text(
-        text = timeText,
-        style = MaterialTheme.typography.displayLarge,
-        color = Color.White,
-        fontSize = 80.sp
-    )
-}
+    var mediaMetadata by remember(isPreview) { mutableStateOf(
+        if (isPreview) {
+            MediaMetadata.Builder()
+                .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title")
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, "Preview Artist")
+                .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, dummyBitmap)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, 180000L)
+                .build()
+        } else null
+    ) }
 
-@Composable
-fun MediaInfoDisplay() {
-    val context = LocalContext.current
-    var mediaMetadata by remember { mutableStateOf<MediaMetadata?>(null) }
-    var playbackState by remember { mutableStateOf<PlaybackState?>(null) }
+    var playbackState by remember(isPreview) { mutableStateOf(
+        if (isPreview) {
+            PlaybackState.Builder()
+                .setState(PlaybackState.STATE_PLAYING, 60000L, 1.0f, SystemClock.elapsedRealtime())
+                .build()
+        } else null
+    ) }
+
     var currentController by remember { mutableStateOf<MediaController?>(null) }
 
-    DisposableEffect(context) {
+    // Media Session Listener
+    DisposableEffect(context, isPreview) {
+        if (isPreview) return@DisposableEffect onDispose {}
+
         val mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
         val componentName = ComponentName(context, MediaNotificationListenerService::class.java)
 
@@ -216,6 +219,7 @@ fun MediaInfoDisplay() {
         }
     }
 
+    // Control Actions
     val transportControls = currentController?.transportControls
     val onPlayPause = {
         if (playbackState?.state == PlaybackState.STATE_PLAYING)
@@ -234,26 +238,40 @@ fun MediaInfoDisplay() {
         transportControls?.seekTo((pos - 30000).coerceAtLeast(0L))
     }
 
-    if (mediaMetadata != null) {
-        val title = mediaMetadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Unknown Title"
-        val artist = mediaMetadata?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Unknown Artist"
-        val albumArt = mediaMetadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
-            ?: mediaMetadata?.getBitmap(MediaMetadata.METADATA_KEY_ART)
+    // --- UI Layout ---
 
-        val duration = mediaMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
-
-        val configuration = LocalConfiguration.current
-        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-        if (isLandscape) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        if (mediaMetadata == null) {
+            // Standby Mode: Just the Clock
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.displayCutout)
             ) {
+                DigitalClock(fontSize = if (isLandscape) 48.sp else 80.sp)
+            }
+        } else {
+            // Media Mode
+            val title = mediaMetadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Unknown Title"
+            val artist = mediaMetadata?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Unknown Artist"
+            val albumArt = mediaMetadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
+                ?: mediaMetadata?.getBitmap(MediaMetadata.METADATA_KEY_ART)
+            val duration = mediaMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+
+            if (isLandscape) {
+                // Landscape Layout: Art Left (2x size), Details Right (Time included)
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.displayCutout)
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     if (albumArt != null) {
                         val matrix = ColorMatrix()
@@ -262,29 +280,102 @@ fun MediaInfoDisplay() {
                         Image(
                             bitmap = albumArt.asImageBitmap(),
                             contentDescription = "Album Art",
-                            modifier = Modifier.size(200.dp),
+                            modifier = Modifier.size(240.dp),
                             colorFilter = ColorFilter.colorMatrix(matrix)
                         )
                         Spacer(modifier = Modifier.width(32.dp))
                     }
 
-                    Column(horizontalAlignment = Alignment.Start) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = Color.White,
-                            textAlign = TextAlign.Start
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        DigitalClock(fontSize = 48.sp)
+                        
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = Color.White,
+                                textAlign = TextAlign.Start
+                            )
+                            Text(
+                                text = artist,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.LightGray,
+                                textAlign = TextAlign.Start
+                            )
+                        }
+
+                        MediaControls(
+                            playbackState = playbackState,
+                            onPlayPause = { onPlayPause() },
+                            onSkipNext = { onSkipNext() },
+                            onSkipPrevious = { onSkipPrevious() },
+                            onForward30 = { onForward30() },
+                            onRewind30 = { onRewind30() },
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
-                        Text(
-                            text = artist,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.LightGray,
-                            textAlign = TextAlign.Start
+
+                        if (duration > 0) {
+                            PlaybackProgressBar(
+                                playbackState, 
+                                duration, 
+                                Modifier.fillMaxWidth(0.9f).align(Alignment.CenterHorizontally)
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Portrait Layout: Stacked
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.displayCutout)
+                        .padding(32.dp)
+                ) {
+                    DigitalClock(fontSize = 80.sp)
+                    
+                    Spacer(modifier = Modifier.height(48.dp))
+
+                    if (albumArt != null) {
+                        val matrix = ColorMatrix()
+                        matrix.setToSaturation(0f)
+                        
+                        Image(
+                            bitmap = albumArt.asImageBitmap(),
+                            contentDescription = "Album Art",
+                            modifier = Modifier
+                                .size(200.dp)
+                                .padding(bottom = 16.dp),
+                            colorFilter = ColorFilter.colorMatrix(matrix)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(32.dp))
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = artist,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.LightGray,
+                        textAlign = TextAlign.Center
+                    )
                     
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (duration > 0) {
+                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth(0.6f))
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     MediaControls(
                         playbackState = playbackState,
                         onPlayPause = { onPlayPause() },
@@ -294,86 +385,81 @@ fun MediaInfoDisplay() {
                         onRewind30 = { onRewind30() }
                     )
                 }
-                
-                Spacer(modifier = Modifier.height(32.dp))
-
-                if (duration > 0) {
-                    PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth())
-                }
-            }
-        } else {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (albumArt != null) {
-                    val matrix = ColorMatrix()
-                    matrix.setToSaturation(0f)
-                    
-                    Image(
-                        bitmap = albumArt.asImageBitmap(),
-                        contentDescription = "Album Art",
-                        modifier = Modifier
-                            .size(200.dp)
-                            .padding(bottom = 16.dp),
-                        colorFilter = ColorFilter.colorMatrix(matrix)
-                    )
-                }
-
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = artist,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.LightGray,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (duration > 0) {
-                    PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth(0.6f))
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                MediaControls(
-                    playbackState = playbackState,
-                    onPlayPause = { onPlayPause() },
-                    onSkipNext = { onSkipNext() },
-                    onSkipPrevious = { onSkipPrevious() },
-                    onForward30 = { onForward30() },
-                    onRewind30 = { onRewind30() }
-                )
             }
         }
     }
 }
 
 @Composable
+fun DigitalClock(fontSize: TextUnit = 80.sp) {
+    var timeText by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            val calendar = Calendar.getInstance()
+            timeText = DateFormat.getTimeFormat(context).format(calendar.time)
+            delay(1000)
+        }
+    }
+
+    Text(
+        text = timeText,
+        style = MaterialTheme.typography.displayLarge,
+        color = Color.White,
+        fontSize = fontSize
+    )
+}
+
+@Composable
 fun PlaybackProgressBar(playbackState: PlaybackState?, duration: Long, modifier: Modifier = Modifier) {
+    var currentPosition by remember { mutableStateOf(0L) }
     var progress by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(playbackState, duration) {
         while (true) {
             if (playbackState != null && playbackState.state == PlaybackState.STATE_PLAYING) {
-                val timeDiff = System.currentTimeMillis() - playbackState.lastPositionUpdateTime
-                val currentPosition = playbackState.position + (timeDiff * playbackState.playbackSpeed).toLong()
+                val timeDiff = SystemClock.elapsedRealtime() - playbackState.lastPositionUpdateTime
+                val calculatedPos = playbackState.position + (timeDiff * playbackState.playbackSpeed).toLong()
+                currentPosition = calculatedPos.coerceIn(0L, duration)
                 progress = (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
             } else if (playbackState != null) {
-                progress = (playbackState.position.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+                currentPosition = playbackState.position.coerceIn(0L, duration)
+                progress = (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
             }
             delay(1000)
         }
     }
 
-    LinearProgressIndicator(
-        progress = progress,
+    Row(
         modifier = modifier,
-        color = Color.White,
-        trackColor = Color.DarkGray,
-    )
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = formatTime(currentPosition),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.White
+        )
+        LinearProgressIndicator(
+            progress = progress,
+            modifier = Modifier.weight(1f),
+            color = Color.White,
+            trackColor = Color.DarkGray,
+        )
+        Text(
+            text = formatTime(duration),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.White
+        )
+    }
+}
+
+fun formatTime(ms: Long): String {
+    val totalSeconds = (ms / 1000).coerceAtLeast(0)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%02d:%02d".format(minutes, seconds)
 }
 
 @Composable
@@ -392,7 +478,21 @@ fun MediaControls(
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         IconButton(onClick = onRewind30) { 
-            Text("-30s", color = Color.White, fontSize = 12.sp) 
+            Canvas(modifier = Modifier.size(24.dp)) {
+                val color = Color.White
+                val path = Path().apply {
+                    moveTo(size.width, 0f)
+                    lineTo(size.width / 2, size.height / 2)
+                    lineTo(size.width, size.height)
+                    close()
+                    
+                    moveTo(size.width / 2, 0f)
+                    lineTo(0f, size.height / 2)
+                    lineTo(size.width / 2, size.height)
+                    close()
+                }
+                drawPath(path, color)
+            }
         }
         
         IconButton(onClick = onSkipPrevious) { 
@@ -443,7 +543,47 @@ fun MediaControls(
         }
         
         IconButton(onClick = onForward30) { 
-            Text("+30s", color = Color.White, fontSize = 12.sp) 
+            Canvas(modifier = Modifier.size(24.dp)) {
+                val color = Color.White
+                val path = Path().apply {
+                    moveTo(0f, 0f)
+                    lineTo(size.width / 2, size.height / 2)
+                    lineTo(0f, size.height)
+                    close()
+                    
+                    moveTo(size.width / 2, 0f)
+                    lineTo(size.width, size.height / 2)
+                    lineTo(size.width / 2, size.height)
+                    close()
+                }
+                drawPath(path, color)
+            }
+        }
+    }
+}
+
+@Preview(name = "Portrait", showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+fun ScreenSaverPortraitPreview() {
+    MediaScreenSaverTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black
+        ) { innerPadding ->
+            ScreenSaverContent(modifier = Modifier.padding(innerPadding))
+        }
+    }
+}
+
+@Preview(name = "Landscape", showBackground = true, device = "spec:width=720dp,height=360dp,orientation=landscape")
+@Composable
+fun ScreenSaverLandscapePreview() {
+    MediaScreenSaverTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black
+        ) { innerPadding ->
+            ScreenSaverContent(modifier = Modifier.padding(innerPadding))
         }
     }
 }
