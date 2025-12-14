@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -56,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,6 +73,7 @@ import kotlinx.coroutines.delay
 import net.ubikapps.mediascreensaver.MediaNotificationListenerService
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import java.util.Calendar
+import kotlin.random.Random
 
 val TAG = "MediaScreenSaverService"
 
@@ -238,10 +241,25 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
         transportControls?.seekTo((pos - 30000).coerceAtLeast(0L))
     }
 
+    // Burn-in protection: Shift content every minute
+    var burnInOffset by remember { mutableStateOf(IntOffset.Zero) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60000) // 1 minute
+            val maxOffset = 40
+            burnInOffset = IntOffset(
+                Random.nextInt(-maxOffset, maxOffset),
+                Random.nextInt(-maxOffset, maxOffset)
+            )
+        }
+    }
+
     // --- UI Layout ---
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .offset { burnInOffset },
         contentAlignment = Alignment.Center
     ) {
         if (mediaMetadata == null) {
@@ -253,7 +271,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.displayCutout)
             ) {
-                DigitalClock(fontSize = if (isLandscape) 48.sp else 80.sp)
+                DigitalClock()
             }
         } else {
             // Media Mode
