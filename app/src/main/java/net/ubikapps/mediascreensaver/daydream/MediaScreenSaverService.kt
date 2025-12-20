@@ -277,7 +277,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.displayCutout)
             ) {
-                DigitalClock(fontSize = if (isLandscape) 48.sp else 80.sp)
+                DigitalClock()
             }
         } else {
             // Media Mode
