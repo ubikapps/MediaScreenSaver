@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.drawable.AnimatedVectorDrawable
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
@@ -12,8 +13,11 @@ import android.os.SystemClock
 import android.service.dreams.DreamService
 import android.text.format.DateFormat
 import android.util.Log
+import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,6 +65,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -71,6 +76,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.delay
 import net.ubikapps.mediascreensaver.MediaNotificationListenerService
+import net.ubikapps.mediascreensaver.R
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import java.util.Calendar
 import kotlin.random.Random
@@ -271,7 +277,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.displayCutout)
             ) {
-                DigitalClock()
+                DigitalClock(fontSize = if (isLandscape) 48.sp else 80.sp)
             }
         } else {
             // Media Mode
@@ -481,6 +487,39 @@ fun formatTime(ms: Long): String {
 }
 
 @Composable
+fun PlayPauseButton(
+    isPlaying: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var previousIsPlaying by remember { mutableStateOf<Boolean?>(null) }
+    
+    AndroidView(
+        modifier = modifier.clickable(onClick = onClick),
+        factory = { context ->
+            ImageView(context).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+        },
+        update = { view ->
+            if (previousIsPlaying == null) {
+                // Initial State
+                view.setImageResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
+            } else if (previousIsPlaying != isPlaying) {
+                // State Changed - Animate
+                val res = if (isPlaying) R.drawable.avd_play_to_pause else R.drawable.avd_pause_to_play
+                view.setImageResource(res)
+                (view.drawable as? AnimatedVectorDrawable)?.start()
+            }
+            previousIsPlaying = isPlaying
+        }
+    )
+}
+
+@Composable
 fun MediaControls(
     playbackState: PlaybackState?,
     onPlayPause: () -> Unit,
@@ -527,24 +566,11 @@ fun MediaControls(
             }
         }
         
-        IconButton(onClick = onPlayPause, modifier = Modifier.size(48.dp)) {
-            val isPlaying = playbackState?.state == PlaybackState.STATE_PLAYING
-            Canvas(modifier = Modifier.size(32.dp)) {
-                val color = Color.White
-                if (isPlaying) {
-                    drawRect(color, topLeft = Offset(0f, 0f), size = Size(size.width / 3, size.height))
-                    drawRect(color, topLeft = Offset(size.width * 2 / 3, 0f), size = Size(size.width / 3, size.height))
-                } else {
-                    val path = Path().apply {
-                        moveTo(0f, 0f)
-                        lineTo(size.width, size.height / 2)
-                        lineTo(0f, size.height)
-                        close()
-                    }
-                    drawPath(path, color)
-                }
-            }
-        }
+        PlayPauseButton(
+            isPlaying = playbackState?.state == PlaybackState.STATE_PLAYING,
+            onClick = onPlayPause,
+            modifier = Modifier.size(48.dp)
+        )
         
         IconButton(onClick = onSkipNext) {
             Canvas(modifier = Modifier.size(24.dp)) {
