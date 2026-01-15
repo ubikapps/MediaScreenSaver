@@ -1,5 +1,6 @@
 package net.ubikapps.mediascreensaver.daydream
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.res.Configuration
@@ -95,6 +96,7 @@ class MediaScreenSaverService : DreamService(), LifecycleOwner, SavedStateRegist
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
 
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         isInteractive = true
@@ -108,8 +110,8 @@ class MediaScreenSaverService : DreamService(), LifecycleOwner, SavedStateRegist
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         containerColor = Color.Black
-                    ) { innerPadding ->
-                        ScreenSaverContent(modifier = Modifier.padding(innerPadding))
+                    ) { _ ->
+                        ScreenSaverContent()
                     }
                 }
             }
@@ -606,6 +608,7 @@ fun MediaControls(
     }
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview(name = "Portrait", showBackground = true, widthDp = 360, heightDp = 640)
 @Composable
 fun ScreenSaverPortraitPreview() {
@@ -613,21 +616,21 @@ fun ScreenSaverPortraitPreview() {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Black
-        ) { innerPadding ->
-            ScreenSaverContent(modifier = Modifier.padding(innerPadding))
+        ) {  _ ->
+            ScreenSaverContent()
         }
     }
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview(name = "Landscape", showBackground = true, device = "spec:width=720dp,height=360dp,orientation=landscape")
 @Composable
 fun ScreenSaverLandscapePreview() {
     MediaScreenSaverTheme {
         Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Black
-        ) { innerPadding ->
-            ScreenSaverContent(modifier = Modifier.padding(innerPadding))
+            Modifier.fillMaxSize(), containerColor = Color.Black
+        ) { _ ->
+            ScreenSaverContent()
         }
     }
 }
