@@ -6,6 +6,7 @@ MediaScreenSaver is an Android application that acts as a screen saver (Daydream
 
 *   Displays media metadata (title, artist, album) of the currently playing track.
 *   Activates as a screen saver when your device is charging or docked.
+*   Controls playback with animated play/pause, skip forward/backward, and more.
 
 ## How it works
 
