@@ -4,8 +4,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.drawable.Icon
 import android.os.BatteryManager
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -13,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -23,14 +26,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import net.ubikapps.mediascreensaver.MediaNotificationListenerService
 
 @Composable
-fun BatteryStatus(modifier: Modifier = Modifier) {
+fun StatusBar(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val isPreview = LocalInspectionMode.current
     var batteryLevel by remember { mutableIntStateOf(if (isPreview) 75 else 0) }
@@ -63,14 +69,39 @@ fun BatteryStatus(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
+        BatteryIcon(
+            level = batteryLevel,
+            modifier = Modifier.size(width = 24.dp, height = 14.dp)
+        )
         Text(
             text = "$batteryLevel%",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.White
         )
-        BatteryIcon(
-            level = batteryLevel,
-            modifier = Modifier.size(width = 24.dp, height = 14.dp)
+
+        val notificationIcons by MediaNotificationListenerService.notifications.collectAsState()
+
+        if (notificationIcons.isNotEmpty()) {
+            notificationIcons.forEach { icon ->
+                NotificationIcon(icon = icon)
+            }
+        }
+    }
+}
+
+@Composable
+fun NotificationIcon(icon: Icon, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val drawable = remember(icon, context) {
+        icon.loadDrawable(context)
+    }
+    
+    if (drawable != null) {
+        Image(
+            painter = rememberDrawablePainter(drawable = drawable),
+            contentDescription = null,
+            modifier = modifier.size(18.dp),
+            colorFilter = ColorFilter.tint(Color.White)
         )
     }
 }
