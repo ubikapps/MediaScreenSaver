@@ -24,7 +24,7 @@ class MediaNotificationListenerService : NotificationListenerService() {
 
     private fun updateNotifications() {
         try {
-            val activeNotifications = getActiveNotifications() ?: return
+            val activeNotifications = activeNotifications ?: return
             val icons = activeNotifications
                 .filter { sbn ->
                     val isMedia = sbn.notification.extras.containsKey(Notification.EXTRA_MEDIA_SESSION)
