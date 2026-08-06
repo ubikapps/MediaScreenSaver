@@ -8,6 +8,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+data class NotificationInfo(
+    val packageName: String,
+    val icon: Icon,
+    val count: Int
+)
+
 class MediaNotificationListenerService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -25,23 +31,30 @@ class MediaNotificationListenerService : NotificationListenerService() {
     private fun updateNotifications() {
         try {
             val activeNotifications = activeNotifications ?: return
-            val icons = activeNotifications
+            val notificationGroups = activeNotifications
                 .filter { sbn ->
                     val isMedia = sbn.notification.extras.containsKey(Notification.EXTRA_MEDIA_SESSION)
                     !isMedia && !sbn.isOngoing
                 }
-                .mapNotNull { it.notification.smallIcon }
-                .distinct() // Basic deduplication
+                .groupBy { it.packageName }
+                .mapNotNull { (packageName, sbns) ->
+                    val firstIcon = sbns.firstOrNull()?.notification?.smallIcon ?: return@mapNotNull null
+                    NotificationInfo(
+                        packageName = packageName,
+                        icon = firstIcon,
+                        count = sbns.size
+                    )
+                }
 
-            _notifications.value = icons
+            _notifications.value = notificationGroups
         } catch (e: Exception) {
             // Service might not be connected yet
         }
     }
 
     companion object {
-        private val _notifications = MutableStateFlow<List<Icon>>(emptyList())
-        val notifications: StateFlow<List<Icon>> = _notifications.asStateFlow()
+        private val _notifications = MutableStateFlow<List<NotificationInfo>>(emptyList())
+        val notifications: StateFlow<List<NotificationInfo>> = _notifications.asStateFlow()
     }
 }
 

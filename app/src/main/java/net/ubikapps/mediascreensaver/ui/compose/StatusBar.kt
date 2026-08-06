@@ -4,13 +4,17 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.drawable.Icon
 import android.os.BatteryManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,9 +35,12 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import net.ubikapps.mediascreensaver.MediaNotificationListenerService
+import net.ubikapps.mediascreensaver.NotificationInfo
 
 @Composable
 fun StatusBar(modifier: Modifier = Modifier) {
@@ -79,30 +86,46 @@ fun StatusBar(modifier: Modifier = Modifier) {
             color = Color.White
         )
 
-        val notificationIcons by MediaNotificationListenerService.notifications.collectAsState()
+        val notificationGroups by MediaNotificationListenerService.notifications.collectAsState()
 
-        if (notificationIcons.isNotEmpty()) {
-            notificationIcons.forEach { icon ->
-                NotificationIcon(icon = icon)
+        if (notificationGroups.isNotEmpty()) {
+            notificationGroups.forEach { group ->
+                NotificationIcon(info = group)
             }
         }
     }
 }
 
 @Composable
-fun NotificationIcon(icon: Icon, modifier: Modifier = Modifier) {
+fun NotificationIcon(info: NotificationInfo, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val drawable = remember(icon, context) {
-        icon.loadDrawable(context)
+    val drawable = remember(info.icon, context) {
+        info.icon.loadDrawable(context)
     }
     
-    if (drawable != null) {
-        Image(
-            painter = rememberDrawablePainter(drawable = drawable),
-            contentDescription = null,
-            modifier = modifier.size(18.dp),
-            colorFilter = ColorFilter.tint(Color.White)
-        )
+    Box(modifier = modifier) {
+        if (drawable != null) {
+            Image(
+                painter = rememberDrawablePainter(drawable = drawable),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                colorFilter = ColorFilter.tint(Color.White)
+            )
+        }
+        if (info.count > 1) {
+            Text(
+                text = info.count.toString(),
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .size(18.dp)
+                    .align(Alignment.BottomCenter)
+                    .offset(x = 6.dp, y = 6.dp)
+                    .background(Color.DarkGray.copy(alpha = 0.5f), CircleShape)
+                    .padding(horizontal = 4.dp)
+            )
+        }
     }
 }
 
