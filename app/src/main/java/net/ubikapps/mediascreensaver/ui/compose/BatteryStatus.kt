@@ -63,15 +63,16 @@ fun BatteryStatus(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
+        BatteryIcon(
+            level = batteryLevel,
+            modifier = Modifier.size(width = 24.dp, height = 14.dp)
+        )
         Text(
             text = "$batteryLevel%",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.White
         )
-        BatteryIcon(
-            level = batteryLevel,
-            modifier = Modifier.size(width = 24.dp, height = 14.dp)
-        )
+
     }
 }
 
