@@ -38,11 +38,16 @@ class MediaNotificationListenerService : NotificationListenerService() {
                 }
                 .groupBy { it.packageName }
                 .mapNotNull { (packageName, sbns) ->
-                    val firstIcon = sbns.firstOrNull()?.notification?.smallIcon ?: return@mapNotNull null
+                    // Filter out group summaries if there are other notifications in the group
+                    // to avoid over-counting (e.g. Gmail showing N+1 for N messages).
+                    val children = sbns.filter { (it.notification.flags and Notification.FLAG_GROUP_SUMMARY) == 0 }
+                    val displayNotifications = if (children.isEmpty()) sbns else children
+                    
+                    val firstIcon = displayNotifications.firstOrNull()?.notification?.smallIcon ?: return@mapNotNull null
                     NotificationInfo(
                         packageName = packageName,
                         icon = firstIcon,
-                        count = sbns.size
+                        count = displayNotifications.size
                     )
                 }
 
