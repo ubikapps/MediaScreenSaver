@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,7 +53,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import net.ubikapps.mediascreensaver.MediaNotificationListenerService
 import net.ubikapps.mediascreensaver.daydream.TAG
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import kotlin.random.Random
@@ -101,7 +101,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
         if (isPreview) return@DisposableEffect onDispose {}
 
         val mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-        val componentName = ComponentName(context, MediaNotificationListenerService::class.java)
+        val componentName = ComponentName(context, "net.ubikapps.mediascreensaver.MediaNotificationListenerService")
 
         val callback = object : MediaController.Callback() {
             override fun onPlaybackStateChanged(state: PlaybackState?) {
@@ -267,7 +267,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                             onSkipPrevious = { onSkipPrevious() },
                             onForward30 = { onForward30() },
                             onRewind30 = { onRewind30() },
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                            modifier = Modifier.fillMaxWidth()
                         )
 
                         if (duration > 0) {
@@ -301,7 +301,8 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                             bitmap = albumArt.asImageBitmap(),
                             contentDescription = "Album Art",
                             modifier = Modifier
-                                .size(200.dp)
+                                .aspectRatio(1f)
+                                .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                             colorFilter = ColorFilter.colorMatrix(matrix)
                         )
@@ -323,7 +324,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     if (duration > 0) {
-                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth(0.6f))
+                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth())
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -334,7 +335,8 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                         onSkipNext = { onSkipNext() },
                         onSkipPrevious = { onSkipPrevious() },
                         onForward30 = { onForward30() },
-                        onRewind30 = { onRewind30() }
+                        onRewind30 = { onRewind30() },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -343,14 +345,14 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Preview(name = "Portrait", showBackground = true, widthDp = 360, heightDp = 640)
+@Preview(name = "Portrait", showBackground = true, widthDp = 360, heightDp = 720)
 @Composable
 fun ScreenSaverPortraitPreview() {
     MediaScreenSaverTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Black
-        ) {  _ ->
+        ) { _ ->
             ScreenSaverContent()
         }
     }
@@ -362,7 +364,8 @@ fun ScreenSaverPortraitPreview() {
 fun ScreenSaverLandscapePreview() {
     MediaScreenSaverTheme {
         Scaffold(
-            Modifier.fillMaxSize(), containerColor = Color.Black
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black
         ) { _ ->
             ScreenSaverContent()
         }

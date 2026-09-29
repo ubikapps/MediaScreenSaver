@@ -72,7 +72,7 @@ fun MediaControls(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         IconButton(onClick = onRewind30) {
             Canvas(modifier = Modifier.size(24.dp)) {

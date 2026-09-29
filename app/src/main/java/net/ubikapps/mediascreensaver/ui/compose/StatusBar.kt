@@ -39,8 +39,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import net.ubikapps.mediascreensaver.MediaNotificationListenerService
+import kotlinx.coroutines.flow.MutableStateFlow
 import net.ubikapps.mediascreensaver.NotificationInfo
+import net.ubikapps.mediascreensaver.NotificationRepository
 
 @Composable
 fun StatusBar(modifier: Modifier = Modifier) {
@@ -86,7 +87,12 @@ fun StatusBar(modifier: Modifier = Modifier) {
             color = Color.White
         )
 
-        val notificationGroups by MediaNotificationListenerService.notifications.collectAsState()
+        val notificationFlow = if (isPreview) {
+            remember { MutableStateFlow<List<NotificationInfo>>(emptyList()) }
+        } else {
+            remember { NotificationRepository.notifications }
+        }
+        val notificationGroups by notificationFlow.collectAsState()
 
         if (notificationGroups.isNotEmpty()) {
             notificationGroups.forEach { group ->
