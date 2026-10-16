@@ -2,7 +2,6 @@ package net.ubikapps.mediascreensaver
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -34,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
     
@@ -147,7 +147,7 @@ fun SetupScreen(modifier: Modifier = Modifier) {
                 )
 
                 Text(
-                    text = "To display active notification icons and counts on your screensaver, MediaScreenSaver requires Notification Access.",
+                    text = "To display active media sessions, notification icons and counts on your screensaver, MediaScreenSaver requires Notification Access.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -174,7 +174,7 @@ fun SetupScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = {
-            val privacyPolicyUri = Uri.parse("https://ubikapps.net/pages/1398")
+            val privacyPolicyUri = "https://ubikapps.net/pages/1398".toUri()
             try {
                 context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUri))
             } catch (e: Exception) {
