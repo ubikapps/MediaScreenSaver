@@ -174,7 +174,7 @@ fun SetupScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = {
-            val privacyPolicyUri = Uri.parse("https://ubikapps.net/mediascreensaver/privacy") // Replace with your actual Privacy Policy URL
+            val privacyPolicyUri = Uri.parse("https://ubikapps.net/pages/1398")
             try {
                 context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUri))
             } catch (e: Exception) {
