@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import net.ubikapps.mediascreensaver.ui.compose.ExceptionBottomSheet
+import net.ubikapps.mediascreensaver.ui.compose.PrivacyPolicyLink
 
 class MainActivity : ComponentActivity() {
     
@@ -136,6 +137,8 @@ fun ReadyScreen(
         }) {
             Text(stringResource(R.string.open_screen_saver_settings))
         }
+        Spacer(modifier = Modifier.height(24.dp))
+        PrivacyPolicyLink(context, onError)
     }
 }
 
@@ -204,19 +207,7 @@ fun SetupScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(onClick = {
-            val privacyPolicyUri = "https://ubikapps.net/pages/1398".toUri()
-            try {
-                context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUri))
-            } catch (e: Exception) {
-                onError(R.string.error_unable_to_open_privacy_policy)
-            }
-        }) {
-            Text(
-                text = stringResource(R.string.view_privacy_policy),
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
+        PrivacyPolicyLink(context, onError)
 
         Spacer(modifier = Modifier.height(16.dp))
 
