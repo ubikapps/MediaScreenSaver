@@ -78,7 +78,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
     var mediaMetadata by remember(isPreview) { mutableStateOf(
         if (isPreview && showMedia) {
             MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title")
+                .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title that is longer to test wrapping")
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, "Preview Artist")
                 .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, dummyBitmap)
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, 180000L)
@@ -185,15 +185,6 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
             .offset { burnInOffset },
         contentAlignment = Alignment.Center
     ) {
-        // Battery Status at the top
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            StatusBar()
-        }
-
         if (mediaMetadata == null) {
             // Standby Mode: Just the Clock
             Column(
@@ -203,6 +194,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.displayCutout)
             ) {
+                StatusBar()
                 AutosizeDigitalClock()
                 Text(
                     text = "No media session",
@@ -225,7 +217,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.displayCutout)
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -236,10 +228,10 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
                         Image(
                             bitmap = albumArt.asImageBitmap(),
                             contentDescription = "Album Art",
-                            modifier = Modifier.size(240.dp),
+                            modifier = Modifier.size(256.dp),
                             colorFilter = ColorFilter.colorMatrix(matrix)
                         )
-                        Spacer(modifier = Modifier.width(32.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
                     }
 
                     Column(
@@ -247,9 +239,11 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
+                        StatusBar()
                         DigitalClock(fontSize = 48.sp)
 
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(horizontal = 8.dp)) {
                             Text(
                                 text = title,
                                 style = MaterialTheme.typography.headlineMedium,
@@ -293,9 +287,10 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
                         .windowInsetsPadding(WindowInsets.displayCutout)
                         .padding(16.dp)
                 ) {
+                    StatusBar()
                     DigitalClock(fontSize = 80.sp)
 
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     if (albumArt != null) {
                         val matrix = ColorMatrix()
