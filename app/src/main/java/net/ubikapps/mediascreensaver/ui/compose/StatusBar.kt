@@ -88,7 +88,7 @@ fun StatusBar(modifier: Modifier = Modifier) {
         )
 
         val notificationFlow = if (isPreview) {
-            remember { MutableStateFlow<List<NotificationInfo>>(emptyList()) }
+            remember { MutableStateFlow(emptyList()) }
         } else {
             remember { NotificationRepository.notifications }
         }
@@ -105,8 +105,21 @@ fun StatusBar(modifier: Modifier = Modifier) {
 @Composable
 fun NotificationIcon(info: NotificationInfo, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val drawable = remember(info.icon, context) {
-        info.icon.loadDrawable(context)
+    val drawable = remember(info.icon, info.packageName, context) {
+        try {
+            info.icon.loadDrawable(context)
+        } catch (e: Exception) {
+            try {
+                val pkgContext = context.createPackageContext(info.packageName, 0)
+                info.icon.loadDrawable(pkgContext)
+            } catch (e2: Exception) {
+                try {
+                    context.packageManager.getApplicationIcon(info.packageName)
+                } catch (e3: Exception) {
+                    null
+                }
+            }
+        }
     }
     
     Box(modifier = modifier) {

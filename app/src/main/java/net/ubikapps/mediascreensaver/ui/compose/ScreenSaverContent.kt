@@ -47,12 +47,14 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import net.ubikapps.mediascreensaver.R
 import net.ubikapps.mediascreensaver.daydream.TAG
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import kotlin.random.Random
@@ -78,7 +80,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
     var mediaMetadata by remember(isPreview) { mutableStateOf(
         if (isPreview && showMedia) {
             MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title that is longer to test wrapping")
+                .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title")
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, "Preview Artist")
                 .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, dummyBitmap)
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, 180000L)
@@ -197,7 +199,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
                 StatusBar()
                 AutosizeDigitalClock()
                 Text(
-                    text = "No media session",
+                    text = stringResource(R.string.no_media_session),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.LightGray,
                     textAlign = TextAlign.Start
@@ -227,34 +229,39 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
 
                         Image(
                             bitmap = albumArt.asImageBitmap(),
-                            contentDescription = "Album Art",
+                            contentDescription = stringResource(R.string.album_art),
                             modifier = Modifier.size(256.dp),
                             colorFilter = ColorFilter.colorMatrix(matrix)
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        StatusBar()
-                        DigitalClock(fontSize = 48.sp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth().padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceEvenly) {
+                            StatusBar()
+                            DigitalClock(fontSize = 48.sp)
+                        }
 
                         Column(horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(horizontal = 8.dp)) {
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
                             Text(
                                 text = title,
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = Color.White,
-                                textAlign = TextAlign.Start
+                                textAlign = TextAlign.Center
                             )
                             Text(
                                 text = artist,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color.LightGray,
-                                textAlign = TextAlign.Start
+                                textAlign = TextAlign.Center
                             )
                         }
 

@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -83,16 +84,18 @@ fun ReadyScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Screen Saver Ready",
+            text = stringResource(R.string.screen_saver_ready),
             style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Permission granted. You can now select this app as your screen saver in system settings.",
+            text = stringResource(R.string.ready_description),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
+            modifier = Modifier.padding(horizontal = 32.dp),
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = {
@@ -102,7 +105,7 @@ fun ReadyScreen(modifier: Modifier = Modifier) {
                 // Handle potential activity not found
             }
         }) {
-            Text("Open Screen Saver Settings")
+            Text(stringResource(R.string.open_screen_saver_settings))
         }
     }
 }
@@ -121,10 +124,11 @@ fun SetupScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Notification Access Required",
+            text = stringResource(R.string.notification_access_required),
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -140,31 +144,26 @@ fun SetupScreen(modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Prominent Disclosure",
+                    text = stringResource(R.string.prominent_disclosure),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
-                    text = "To display active media sessions, notification icons and counts on your screensaver, MediaScreenSaver requires Notification Access.",
+                    text = stringResource(R.string.prominent_disclosure_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
-                    text = "Data Accessed & Used:\n" +
-                            "• App icons and package names of active notifications\n" +
-                            "• Active notification counts",
+                    text = stringResource(R.string.prominent_disclosure_data_accessed),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
-                    text = "Privacy & Safety:\n" +
-                            "• Notification text and message contents are NEVER read, stored, or processed.\n" +
-                            "• All data is processed locally on your device in real-time.\n" +
-                            "• NO notification data is ever collected or transmitted off your device.",
+                    text = stringResource(R.string.prominent_disclosure_privacy_safety),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -182,7 +181,7 @@ fun SetupScreen(modifier: Modifier = Modifier) {
             }
         }) {
             Text(
-                text = "View Privacy Policy",
+                text = stringResource(R.string.view_privacy_policy),
                 style = MaterialTheme.typography.labelLarge
             )
         }
@@ -199,7 +198,7 @@ fun SetupScreen(modifier: Modifier = Modifier) {
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Agree & Open Notification Settings")
+            Text(stringResource(R.string.agree_and_open_notification_settings))
         }
     }
 }
