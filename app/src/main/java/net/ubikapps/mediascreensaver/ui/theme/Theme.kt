@@ -1,7 +1,11 @@
 package net.ubikapps.mediascreensaver.ui.theme
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Build
+import android.service.dreams.DreamService
+import android.view.Window
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -14,6 +18,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryDark,
@@ -61,11 +67,22 @@ private val LightColorScheme = lightColorScheme(
     outlineVariant = OutlineVariantLight,
 )
 
+private fun Context.findWindow(): Window? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx.window
+        if (ctx is DreamService) return ctx.window
+        ctx = ctx.baseContext
+    }
+    return null
+}
+
 @Composable
 fun MediaScreenSaverTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color disabled by default so the icon-based brand theme takes effect
     dynamicColor: Boolean = false,
+    hideNavigationBars: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
@@ -81,14 +98,26 @@ fun MediaScreenSaverTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as? Activity)?.window
+            val window = view.context.findWindow()
             if (window != null) {
                 @Suppress("DEPRECATION")
                 window.statusBarColor = colorScheme.background.toArgb()
                 @Suppress("DEPRECATION")
                 window.navigationBarColor = colorScheme.background.toArgb()
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
-                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
+                @Suppress("DEPRECATION")
+                window.isNavigationBarContrastEnforced = false
+                @Suppress("DEPRECATION")
+                window.isStatusBarContrastEnforced = false
+                val insetsController = WindowCompat.getInsetsController(window, view)
+                insetsController.isAppearanceLightStatusBars = !darkTheme
+                insetsController.isAppearanceLightNavigationBars = !darkTheme
+                if (hideNavigationBars) {
+                    insetsController.hide(WindowInsetsCompat.Type.navigationBars())
+                    insetsController.systemBarsBehavior =
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                } else {
+                    insetsController.show(WindowInsetsCompat.Type.navigationBars())
+                }
             }
         }
     }
