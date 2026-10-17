@@ -6,7 +6,7 @@
     <string name="notification_access_required">Notification Access Required</string>
     <string name="prominent_disclosure">Prominent Disclosure</string>
     <string name="prominent_disclosure_description">To display active media sessions, notification icons and counts on your screensaver, MediaScreenSaver requires Notification Access.</string>
-    <string name="prominent_disclosure_data_accessed">Data Accessed &amp; Used:\n• App icons and package names of active notifications\n• Active notification counts</string>
+    <string name="prominent_disclosure_data_accessed">Data Accessed &amp; Used:\n• App icons and package names of active notifications\n• Active notification counts\n• Media session information</string>
     <string name="prominent_disclosure_privacy_safety">Privacy &amp; Safety:\n• Notification text and message contents are NEVER read, stored, or processed.\n• All data is processed locally on your device in real-time.\n• NO notification data is ever collected or transmitted off your device as this app does not have permission to access the internet.</string>
     <string name="view_privacy_policy">View Privacy Policy</string>
     <string name="permission_instructions">In the settings find \"MediaScreenSaver\" and click on \""Allow notification access\"</string>
