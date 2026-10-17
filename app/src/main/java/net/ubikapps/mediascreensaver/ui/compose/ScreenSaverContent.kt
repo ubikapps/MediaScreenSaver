@@ -12,6 +12,7 @@ import android.media.session.PlaybackState
 import android.os.SystemClock
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,8 +77,8 @@ fun ScreenSaverContent(
     var mediaMetadata by remember(isPreview, showMedia) { mutableStateOf(
         if (isPreview && showMedia) {
             val builder = MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title")
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, "Preview Artist")
+                .putString(MediaMetadata.METADATA_KEY_TITLE, "Song Title")
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, "Artist Name")
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, 180000L)
             builder.build()
         } else null
@@ -133,7 +134,7 @@ fun ScreenSaverContent(
             updateController(initialSessions)
             mediaSessionManager.addOnActiveSessionsChangedListener(sessionListener, componentName)
         } catch (e: SecurityException) {
-            Log.e(TAG, "permision not granted: $e")
+            Log.e(TAG, "permission not granted: $e")
         }
 
         onDispose {
@@ -218,24 +219,7 @@ fun ScreenSaverContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    if (albumArt != null) {
-                        val matrix = ColorMatrix()
-                        matrix.setToSaturation(0f)
-
-                        Image(
-                            bitmap = albumArt.asImageBitmap(),
-                            contentDescription = stringResource(R.string.album_art),
-                            modifier = Modifier.size(256.dp),
-                            colorFilter = ColorFilter.colorMatrix(matrix)
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_music_note),
-                            contentDescription = stringResource(R.string.album_art),
-                            modifier = Modifier.size(256.dp),
-                            colorFilter = ColorFilter.tint(Color.LightGray)
-                        )
-                    }
+                    AlbumArt(albumArt, Modifier.size(256.dp))
                     Spacer(modifier = Modifier.width(8.dp))
 
                     Column(
@@ -301,30 +285,10 @@ fun ScreenSaverContent(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    if (albumArt != null) {
-                        val matrix = ColorMatrix()
-                        matrix.setToSaturation(0f)
-
-                        Image(
-                            bitmap = albumArt.asImageBitmap(),
-                            contentDescription = stringResource(R.string.album_art),
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            colorFilter = ColorFilter.colorMatrix(matrix)
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_music_note),
-                            contentDescription = stringResource(R.string.album_art),
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            colorFilter = ColorFilter.tint(Color.LightGray)
-                        )
-                    }
+                    AlbumArt(albumArt, modifier = Modifier
+                        .aspectRatio(1f)
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp))
 
                     Text(
                         text = title,
