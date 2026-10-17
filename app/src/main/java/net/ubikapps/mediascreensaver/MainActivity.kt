@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,12 +20,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,8 +38,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import androidx.core.net.toUri
+import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
+import net.ubikapps.mediascreensaver.ui.compose.ExceptionBottomSheet
 
 class MainActivity : ComponentActivity() {
     
@@ -57,7 +63,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        hasPermission.value = isNotificationServiceEnabled(this)
+        try {
+            hasPermission.value = isNotificationServiceEnabled(this)
+        } catch (e: Exception) {
+            // Handle potential settings query exception
+        }
     }
 
     private fun isNotificationServiceEnabled(context: Context): Boolean {
@@ -66,17 +76,36 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
+    var errorMessageResId by remember { mutableStateOf<Int?>(null) }
+
     if (hasPermission) {
-        ReadyScreen(modifier)
+        ReadyScreen(
+            modifier = modifier,
+            onError = { errorMessageResId = it }
+        )
     } else {
-        SetupScreen(modifier)
+        SetupScreen(
+            modifier = modifier,
+            onError = { errorMessageResId = it }
+        )
+    }
+
+    errorMessageResId?.let { resId ->
+        ExceptionBottomSheet(
+            errorMessageResId = resId,
+            onDismiss = { errorMessageResId = null }
+        )
     }
 }
 
 @Composable
-fun ReadyScreen(modifier: Modifier = Modifier) {
+fun ReadyScreen(
+    modifier: Modifier = Modifier,
+    onError: (Int) -> Unit = {}
+) {
     val context = LocalContext.current
     Column(
         modifier = modifier.fillMaxSize(),
@@ -102,7 +131,7 @@ fun ReadyScreen(modifier: Modifier = Modifier) {
             try {
                 context.startActivity(Intent(Settings.ACTION_DREAM_SETTINGS))
             } catch (e: Exception) {
-                // Handle potential activity not found
+                onError(R.string.error_unable_to_open_screen_saver_settings)
             }
         }) {
             Text(stringResource(R.string.open_screen_saver_settings))
@@ -111,7 +140,10 @@ fun ReadyScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SetupScreen(modifier: Modifier = Modifier) {
+fun SetupScreen(
+    modifier: Modifier = Modifier,
+    onError: (Int) -> Unit = {}
+) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
@@ -177,7 +209,7 @@ fun SetupScreen(modifier: Modifier = Modifier) {
             try {
                 context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUri))
             } catch (e: Exception) {
-                // Handle potential activity not found
+                onError(R.string.error_unable_to_open_privacy_policy)
             }
         }) {
             Text(
@@ -193,7 +225,7 @@ fun SetupScreen(modifier: Modifier = Modifier) {
                 try {
                     context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
                 } catch (e: Exception) {
-                    // Handle potential activity not found
+                    onError(R.string.error_unable_to_open_notification_settings)
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -216,5 +248,21 @@ fun SetupScreenPreview() {
 fun ReadyScreenPreview() {
     MediaScreenSaverTheme {
         ReadyScreen()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainContentWithErrorPreview() {
+    MediaScreenSaverTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                ReadyScreen()
+                ExceptionBottomSheet(
+                    errorMessageResId = R.string.error_unable_to_open_screen_saver_settings,
+                    onDismiss = {}
+                )
+            }
+        }
     }
 }

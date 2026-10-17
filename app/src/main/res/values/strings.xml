@@ -12,4 +12,9 @@
     <string name="agree_and_open_notification_settings">Agree &amp; Open Notification Settings</string>
     <string name="no_media_session">No media session</string>
     <string name="album_art">Album Art</string>
+    <string name="error_title">Error</string>
+    <string name="error_unable_to_open_screen_saver_settings">Unable to open screen saver settings on this device.</string>
+    <string name="error_unable_to_open_privacy_policy">Unable to open the privacy policy web page.</string>
+    <string name="error_unable_to_open_notification_settings">Unable to open notification listener settings on this device.</string>
+    <string name="error_dismiss">OK</string>
 </resources>
