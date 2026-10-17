@@ -18,4 +18,10 @@
     <string name="error_unable_to_open_privacy_policy">Unable to open the privacy policy web page.</string>
     <string name="error_unable_to_open_notification_settings">Unable to open notification listener settings on this device.</string>
     <string name="error_dismiss">OK</string>
+    <string name="help">Help</string>
+    <string name="help_title">Help &amp; About</string>
+    <string name="help_description">MediaScreenSaver is a screen saver for Android that displays information and playback controls for your currently playing media, along with a digital clock and status details while your device is charging or docked.</string>
+    <string name="github_repository">GitHub Repository</string>
+    <string name="website">Website: ubikapps.dev</string>
+    <string name="error_unable_to_open_url">Unable to open link on this device.</string>
 </resources>
