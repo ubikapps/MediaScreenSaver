@@ -8,8 +8,10 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,9 +23,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import net.ubikapps.mediascreensaver.R
+import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 
 
 @Composable
@@ -72,7 +76,7 @@ fun MediaControls(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = onRewind30) {
             Canvas(modifier = Modifier.size(24.dp)) {
@@ -142,6 +146,26 @@ fun MediaControls(
                 }
                 drawPath(path, color)
             }
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+fun MediaControlsPreview() {
+    MediaScreenSaverTheme {
+        Surface(color = Color.Black) {
+            MediaControls(
+                playbackState = PlaybackState.Builder()
+                    .setState(PlaybackState.STATE_PLAYING, 0L, 1.0f)
+                    .build(),
+                onPlayPause = {},
+                onSkipNext = {},
+                onSkipPrevious = {},
+                onForward30 = {},
+                onRewind30 = {},
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

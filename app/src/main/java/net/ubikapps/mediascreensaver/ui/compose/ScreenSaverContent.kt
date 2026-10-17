@@ -274,7 +274,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                             PlaybackProgressBar(
                                 playbackState,
                                 duration,
-                                Modifier.fillMaxWidth(0.9f).align(Alignment.CenterHorizontally)
+                                Modifier.fillMaxWidth(0.95f).align(Alignment.CenterHorizontally)
                             )
                         }
                     }
@@ -287,7 +287,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.displayCutout)
-                        .padding(32.dp)
+                        .padding(16.dp)
                 ) {
                     DigitalClock(fontSize = 80.sp)
 
@@ -323,12 +323,6 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (duration > 0) {
-                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth())
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
                     MediaControls(
                         playbackState = playbackState,
                         onPlayPause = { onPlayPause() },
@@ -338,6 +332,12 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                         onRewind30 = { onRewind30() },
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    if (duration > 0) {
+                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth(0.95f))
+                    }
+
                 }
             }
         }
