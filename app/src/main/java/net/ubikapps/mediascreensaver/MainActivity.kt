@@ -221,6 +221,14 @@ fun SetupScreen(
         ) {
             Text(stringResource(R.string.agree_and_open_notification_settings))
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.permission_instructions),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
