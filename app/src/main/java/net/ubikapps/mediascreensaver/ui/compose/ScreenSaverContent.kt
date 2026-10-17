@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,7 +61,10 @@ import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import kotlin.random.Random
 
 @Composable
-fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true) {
+fun ScreenSaverContent(
+    modifier: Modifier = Modifier,
+    showMedia: Boolean = true
+) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val context = LocalContext.current
@@ -68,23 +72,14 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
 
     // --- State Hoisting ---
 
-    // Dummy data for preview
-    val dummyBitmap = remember(isPreview) {
-        if (isPreview) {
-            Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888).apply {
-                eraseColor(android.graphics.Color.GRAY)
-            }
-        } else null
-    }
 
-    var mediaMetadata by remember(isPreview) { mutableStateOf(
+    var mediaMetadata by remember(isPreview, showMedia) { mutableStateOf(
         if (isPreview && showMedia) {
-            MediaMetadata.Builder()
+            val builder = MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title")
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, "Preview Artist")
-                .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, dummyBitmap)
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, 180000L)
-                .build()
+            builder.build()
         } else null
     ) }
 
@@ -233,8 +228,15 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
                             modifier = Modifier.size(256.dp),
                             colorFilter = ColorFilter.colorMatrix(matrix)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_music_note),
+                            contentDescription = stringResource(R.string.album_art),
+                            modifier = Modifier.size(256.dp),
+                            colorFilter = ColorFilter.tint(Color.LightGray)
+                        )
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Column(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -305,12 +307,22 @@ fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true)
 
                         Image(
                             bitmap = albumArt.asImageBitmap(),
-                            contentDescription = "Album Art",
+                            contentDescription = stringResource(R.string.album_art),
                             modifier = Modifier
                                 .aspectRatio(1f)
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                             colorFilter = ColorFilter.colorMatrix(matrix)
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_music_note),
+                            contentDescription = stringResource(R.string.album_art),
+                            modifier = Modifier
+                                .aspectRatio(1f)
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            colorFilter = ColorFilter.tint(Color.LightGray)
                         )
                     }
 
@@ -364,6 +376,7 @@ fun ScreenSaverPortraitPreview() {
     }
 }
 
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview(name = "Landscape", showBackground = true, device = "spec:width=720dp,height=360dp,orientation=landscape")
 @Composable
@@ -377,6 +390,7 @@ fun ScreenSaverLandscapePreview() {
         }
     }
 }
+
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview(name = "Portrait", showBackground = true, widthDp = 360, heightDp = 720)
