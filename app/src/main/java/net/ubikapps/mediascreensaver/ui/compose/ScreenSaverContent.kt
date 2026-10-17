@@ -58,7 +58,7 @@ import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import kotlin.random.Random
 
 @Composable
-fun ScreenSaverContent(modifier: Modifier = Modifier) {
+fun ScreenSaverContent(modifier: Modifier = Modifier, showMedia: Boolean = true) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val context = LocalContext.current
@@ -76,7 +76,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
     }
 
     var mediaMetadata by remember(isPreview) { mutableStateOf(
-        if (isPreview) {
+        if (isPreview && showMedia) {
             MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title")
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, "Preview Artist")
@@ -179,8 +179,6 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
         }
     }
 
-    // --- UI Layout ---
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -205,7 +203,13 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.displayCutout)
             ) {
-                DigitalClock()
+                AutosizeDigitalClock()
+                Text(
+                    text = "No media session",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.LightGray,
+                    textAlign = TextAlign.Start
+                )
             }
         } else {
             // Media Mode
@@ -368,6 +372,34 @@ fun ScreenSaverLandscapePreview() {
             containerColor = Color.Black
         ) { _ ->
             ScreenSaverContent()
+        }
+    }
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Preview(name = "Portrait", showBackground = true, widthDp = 360, heightDp = 720)
+@Composable
+fun ClockPortraitPreview() {
+    MediaScreenSaverTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black
+        ) { _ ->
+            ScreenSaverContent(showMedia = false)
+        }
+    }
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Preview(name = "Landscape", showBackground = true, device = "spec:width=720dp,height=360dp,orientation=landscape")
+@Composable
+fun ClockLandscapePreview(){
+    MediaScreenSaverTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black
+        ) {  _ ->
+            ScreenSaverContent(showMedia = false)
         }
     }
 }
