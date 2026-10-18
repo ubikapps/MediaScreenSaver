@@ -4,35 +4,42 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,13 +47,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.vectordrawable.graphics.drawable.SeekableAnimatedVectorDrawable
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import net.ubikapps.mediascreensaver.ui.compose.ExceptionBottomSheet
 import net.ubikapps.mediascreensaver.ui.screens.HelpScreen
 import net.ubikapps.mediascreensaver.ui.compose.PrivacyPolicyLink
 
+
 class MainActivity : ComponentActivity() {
-    
+
     private var hasPermission = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,12 +89,13 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
     var showHelpScreen by rememberSaveable { mutableStateOf(false) }
     var errorMessageResId by rememberSaveable { mutableStateOf<Int?>(null) }
-
+    val configuration = LocalConfiguration.current
+    val screenDensity = configuration.densityDpi / 160f
+    val screenWidth = configuration.screenWidthDp.toFloat() * screenDensity
     if (showHelpScreen) {
         HelpScreen(
             onBack = { showHelpScreen = false },
@@ -93,14 +104,73 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
         )
     } else {
         Box(modifier = modifier.fillMaxSize()) {
-            if (hasPermission) {
-                ReadyScreen(
-                    onError = { errorMessageResId = it }
-                )
-            } else {
-                SetupScreen(
-                    onError = { errorMessageResId = it }
-                )
+            val context = LocalContext.current
+            val seekableAvd = remember(context) {
+                SeekableAnimatedVectorDrawable.create(context, R.drawable.pager_background)
+            }
+
+            val pagerState = rememberPagerState(
+                initialPage = if (hasPermission) 1 else 0,
+                pageCount = { 2 }
+            )
+
+            LaunchedEffect(hasPermission) {
+                if (hasPermission) {
+                    pagerState.animateScrollToPage(1)
+                } else {
+                    pagerState.animateScrollToPage(0)
+                }
+            }
+
+            // Background layer: AVD in top half
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    AndroidView(
+                        factory = { ctx ->
+                            ImageView(ctx).apply {
+                                scaleX = 2F
+                                scaleY = 2F
+                                scaleType = ImageView.ScaleType.FIT_END
+                                translationX = screenWidth / 2F
+                                setImageDrawable(seekableAvd)
+                            }
+                        },
+                        update = { imageView ->
+                            val progress = (pagerState.currentPage + pagerState.currentPageOffsetFraction).coerceIn(0f, 1f)
+                            val totalDuration = seekableAvd?.totalDuration ?: 1000L
+                            val targetPlayTime = (progress * totalDuration).toLong().coerceIn(0L, totalDuration)
+                            seekableAvd?.currentPlayTime = targetPlayTime
+                            imageView.invalidate()
+                        },
+                        modifier = Modifier.fillMaxSize().absoluteOffset(y=2.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            // Foreground layer: HorizontalPager spans the full screen so swipes anywhere drive the pager
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.background)
+                            .weight(1f)
+                    ) {
+                        when (page) {
+                            0 -> SetupScreen(onError = { errorMessageResId = it })
+                            1 -> ReadyScreen(onError = { errorMessageResId = it })
+                        }
+                    }
+                }
             }
 
             IconButton(
@@ -132,8 +202,12 @@ fun ReadyScreen(
     onError: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -260,19 +334,12 @@ fun SetupScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun SetupScreenPreview() {
+fun MainContentPreview() {
     MediaScreenSaverTheme {
-        SetupScreen()
+        MainContent(false)
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ReadyScreenPreview() {
-    MediaScreenSaverTheme {
-        ReadyScreen()
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
