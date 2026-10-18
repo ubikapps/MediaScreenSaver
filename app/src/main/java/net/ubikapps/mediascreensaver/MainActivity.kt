@@ -1,5 +1,6 @@
 package net.ubikapps.mediascreensaver
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -49,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.vectordrawable.graphics.drawable.SeekableAnimatedVectorDrawable
+import net.ubikapps.mediascreensaver.daydream.MediaScreenSaverService
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import net.ubikapps.mediascreensaver.ui.compose.ExceptionBottomSheet
 import net.ubikapps.mediascreensaver.ui.screens.HelpScreen
@@ -86,6 +88,35 @@ class MainActivity : ComponentActivity() {
     private fun isNotificationServiceEnabled(context: Context): Boolean {
         val flat = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
         return flat != null && flat.contains(context.packageName)
+    }
+}
+
+/**
+ * Checks if the screen saver feature is enabled globally in Android settings.
+ */
+fun isScreenSaverEnabled(context: Context): Boolean {
+    return Settings.Secure.getInt(
+        context.contentResolver,
+        "screensaver_enabled",
+        0
+    ) == 1
+}
+
+/**
+ * Checks if MediaScreenSaverService is currently set as the active screen saver.
+ */
+fun isOurScreenSaverSet(context: Context): Boolean {
+    if (!isScreenSaverEnabled(context)) return false
+
+    val componentsString = Settings.Secure.getString(
+        context.contentResolver,
+        "screensaver_components"
+    ) ?: return false
+
+    val myComponent = ComponentName(context, MediaScreenSaverService::class.java)
+
+    return componentsString.split(",").any { component ->
+        ComponentName.unflattenFromString(component.trim()) == myComponent
     }
 }
 
@@ -212,14 +243,14 @@ fun ReadyScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(R.string.screen_saver_ready),
+            text = if(isOurScreenSaverSet(context)) stringResource(R.string.screen_saver_ready) else stringResource(R.string.nearly_there),
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.ready_description),
+            text = if(isOurScreenSaverSet(context)) stringResource(R.string.done_description) else stringResource(R.string.ready_description),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 32.dp),
@@ -263,7 +294,28 @@ fun SetupScreen(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
-        
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.permission_instructions),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                try {
+                    context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                } catch (_: Exception) {
+                    onError(R.string.error_unable_to_open_notification_settings)
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.agree_and_open_notification_settings))
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         Card(
@@ -307,28 +359,6 @@ fun SetupScreen(
 
         PrivacyPolicyLink(context, onError)
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                try {
-                    context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                } catch (_: Exception) {
-                    onError(R.string.error_unable_to_open_notification_settings)
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.agree_and_open_notification_settings))
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.permission_instructions),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
 

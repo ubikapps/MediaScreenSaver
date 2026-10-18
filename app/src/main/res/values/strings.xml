@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">MediaScreenSaver</string>
+    <string name="nearly_there">Nearly there</string>
     <string name="screen_saver_ready">Screen Saver Ready</string>
     <string name="ready_description">Permission granted. You can now select this app as your screen saver in system settings.</string>
+    <string name="done_description">Permission granted and Screen saver set. Well done!</string>
     <string name="open_screen_saver_settings">Open Screen Saver Settings</string>
     <string name="notification_access_required">Notification Access Required</string>
     <string name="prominent_disclosure">Prominent Disclosure</string>
