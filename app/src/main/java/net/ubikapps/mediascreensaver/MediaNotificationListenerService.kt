@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 data class NotificationInfo(
     val packageName: String,
-    val icon: Icon,
+    val icon: Icon?,
     val count: Int
 )
 

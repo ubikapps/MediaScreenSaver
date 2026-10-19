@@ -106,18 +106,27 @@ fun StatusBar(modifier: Modifier = Modifier) {
 fun NotificationIcon(info: NotificationInfo, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val drawable = remember(info.icon, info.packageName, context) {
-        try {
-            info.icon.loadDrawable(context)
-        } catch (e: Exception) {
+        val icon = info.icon
+        if (icon != null) {
             try {
-                val pkgContext = context.createPackageContext(info.packageName, 0)
-                info.icon.loadDrawable(pkgContext)
-            } catch (e2: Exception) {
+                icon.loadDrawable(context)
+            } catch (e: Exception) {
                 try {
-                    context.packageManager.getApplicationIcon(info.packageName)
-                } catch (e3: Exception) {
-                    null
+                    val pkgContext = context.createPackageContext(info.packageName, 0)
+                    icon.loadDrawable(pkgContext)
+                } catch (e2: Exception) {
+                    try {
+                        context.packageManager.getApplicationIcon(info.packageName)
+                    } catch (e3: Exception) {
+                        null
+                    }
                 }
+            }
+        } else {
+            try {
+                context.packageManager.getApplicationIcon(info.packageName)
+            } catch (e3: Exception) {
+                null
             }
         }
     }
