@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import net.ubikapps.mediascreensaver.MediaNotificationListenerService
 import net.ubikapps.mediascreensaver.R
 import net.ubikapps.mediascreensaver.daydream.TAG
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
@@ -99,7 +100,7 @@ fun ScreenSaverContent(
         if (isPreview) return@DisposableEffect onDispose {}
 
         val mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-        val componentName = ComponentName(context, "net.ubikapps.mediascreensaver.MediaNotificationListenerService")
+        val componentName = ComponentName(context, MediaNotificationListenerService::class.java)
 
         val callback = object : MediaController.Callback() {
             override fun onPlaybackStateChanged(state: PlaybackState?) {
@@ -130,11 +131,14 @@ fun ScreenSaverContent(
         }
 
         try {
+            MediaNotificationListenerService.ensureRebound(context)
             val initialSessions = mediaSessionManager.getActiveSessions(componentName)
             updateController(initialSessions)
             mediaSessionManager.addOnActiveSessionsChangedListener(sessionListener, componentName)
         } catch (e: SecurityException) {
             Log.e(TAG, "permission not granted: $e")
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to initialize active media sessions: $e")
         }
 
         onDispose {

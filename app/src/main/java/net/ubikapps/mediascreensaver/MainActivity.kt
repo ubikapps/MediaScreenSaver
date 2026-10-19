@@ -177,7 +177,7 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
                             seekableAvd?.currentPlayTime = targetPlayTime
                             imageView.invalidate()
                         },
-                        modifier = Modifier.fillMaxSize().absoluteOffset(y=2.dp)
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
