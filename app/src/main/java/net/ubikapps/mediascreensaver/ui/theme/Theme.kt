@@ -17,9 +17,11 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.colorResource
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import net.ubikapps.mediascreensaver.R
 
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryDark,
@@ -67,7 +69,7 @@ private val LightColorScheme = lightColorScheme(
     outlineVariant = OutlineVariantLight,
 )
 
-private fun Context.findWindow(): Window? {
+internal fun Context.findWindow(): Window? {
     var ctx = this
     while (ctx is ContextWrapper) {
         if (ctx is Activity) return ctx.window
@@ -96,12 +98,13 @@ fun MediaScreenSaverTheme(
     }
 
     val view = LocalView.current
+    val transparentColor = colorResource(R.color.transparent).toArgb()
     if (!view.isInEditMode) {
         SideEffect {
             val window = view.context.findWindow()
             if (window != null) {
                 @Suppress("DEPRECATION")
-                window.statusBarColor = colorScheme.background.toArgb()
+                window.statusBarColor = transparentColor
                 @Suppress("DEPRECATION")
                 window.navigationBarColor = colorScheme.background.toArgb()
                 @Suppress("DEPRECATION")

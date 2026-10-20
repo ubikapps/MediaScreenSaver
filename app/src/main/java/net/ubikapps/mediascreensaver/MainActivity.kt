@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -29,7 +32,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,8 +42,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,12 +70,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MediaScreenSaverTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainContent(
-                        hasPermission = hasPermission.value,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                MainContent(
+                    hasPermission = hasPermission.value,
+                    modifier = Modifier.fillMaxSize().navigationBarsPadding()
+                )
             }
         }
     }
@@ -127,6 +129,9 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
     val configuration = LocalConfiguration.current
     val screenDensity = configuration.densityDpi / 160f
     val screenWidth = configuration.screenWidthDp.toFloat() * screenDensity
+    val density = LocalDensity.current
+    val statusBarHeightPx = WindowInsets.statusBars.getTop(density).toFloat()
+
     if (showHelpScreen) {
         HelpScreen(
             onBack = { showHelpScreen = false },
@@ -167,10 +172,12 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
                                 scaleY = 2F
                                 scaleType = ImageView.ScaleType.FIT_END
                                 translationX = screenWidth / 2F
+                                translationY = -statusBarHeightPx
                                 setImageDrawable(seekableAvd)
                             }
                         },
                         update = { imageView ->
+                            imageView.translationY = -statusBarHeightPx
                             val progress = (pagerState.currentPage + pagerState.currentPageOffsetFraction).coerceIn(0f, 1f)
                             val totalDuration = seekableAvd?.totalDuration ?: 1000L
                             val targetPlayTime = (progress * totalDuration).toLong().coerceIn(0L, totalDuration)
@@ -193,8 +200,21 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.background)
                             .weight(1f)
+                            .layout { measurable, constraints ->
+                                val offsetPx = statusBarHeightPx.toInt()
+                                val targetHeight = constraints.maxHeight + offsetPx
+                                val placeable = measurable.measure(
+                                    constraints.copy(
+                                        minHeight = targetHeight,
+                                        maxHeight = targetHeight
+                                    )
+                                )
+                                layout(constraints.maxWidth, constraints.maxHeight) {
+                                    placeable.placeRelative(0, -offsetPx)
+                                }
+                            }
+                            .background(MaterialTheme.colorScheme.background)
                     ) {
                         when (page) {
                             0 -> SetupScreen(onError = { errorMessageResId = it })
@@ -208,7 +228,8 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
                 onClick = { showHelpScreen = true },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(8.dp)
+                    .statusBarsPadding()
+                    .padding(end = 8.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_help),
@@ -237,6 +258,7 @@ fun ReadyScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .navigationBarsPadding()
             .verticalScroll(scrollState)
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
@@ -282,6 +304,7 @@ fun SetupScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .navigationBarsPadding()
             .verticalScroll(scrollState)
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
@@ -375,14 +398,12 @@ fun MainContentPreview() {
 @Composable
 fun MainContentWithErrorPreview() {
     MediaScreenSaverTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                ReadyScreen()
-                ExceptionBottomSheet(
-                    errorMessageResId = R.string.error_unable_to_open_screen_saver_settings,
-                    onDismiss = {}
-                )
-            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            ReadyScreen()
+            ExceptionBottomSheet(
+                errorMessageResId = R.string.error_unable_to_open_screen_saver_settings,
+                onDismiss = {}
+            )
         }
     }
 }

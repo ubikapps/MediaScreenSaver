@@ -2,7 +2,7 @@
 <resources>
     <style name="Theme.MediaScreenSaver" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/icon_bg_dark</item>
-        <item name="android:statusBarColor">@color/icon_bg_dark</item>
+        <item name="android:statusBarColor">@color/transparent</item>
         <item name="android:navigationBarColor">@color/icon_bg_dark</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:enforceNavigationBarContrast">false</item>

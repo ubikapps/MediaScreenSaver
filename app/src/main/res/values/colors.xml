@@ -9,4 +9,5 @@
     <color name="icon_purple">#C084FC</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#00FFFFFF</color>
 </resources>
