@@ -45,15 +45,19 @@
                         android:strokeWidth="4"
                         android:strokeLineJoin="round"/>
                 </group>
-                <group android:name="playtreeday">
+                <group
+                    android:name="playtreeday"
+                    android:pivotX="256"
+                    android:pivotY="512"
+                    android:rotation="-10">
                     <path
                         android:name="rect18_71"
-                        android:pathData="M 403.205 743.76 C 400.4 738.898 387.139 715.693 385.771 713.388 C 383.638 709.793 405.784 748.231 403.205 743.76 Z"
+                        android:pathData="M 406.205 746.76 C 403.4 741.898 390.139 718.693 388.771 716.388 C 386.638 712.793 408.784 751.231 406.205 746.76 Z"
                         android:strokeColor="#f472b6"
                         android:strokeWidth="5"/>
                     <path
                         android:name="path14_1"
-                        android:pathData="M 417.695 770.05 L 391.695 754.05 L 417.695 738.05 Z"
+                        android:pathData="M 420.695 773.05 L 394.695 757.05 L 420.695 741.05 Z"
                         android:fillColor="#005522"
                         android:strokeColor="#005522"
                         android:strokeWidth="4"
