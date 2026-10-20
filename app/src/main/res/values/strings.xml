@@ -26,4 +26,5 @@
     <string name="github_repository">GitHub Repository</string>
     <string name="website">Website: ubikapps.dev</string>
     <string name="error_unable_to_open_url">Unable to open link on this device.</string>
+    <string name="more_info">More Info</string>
 </resources>

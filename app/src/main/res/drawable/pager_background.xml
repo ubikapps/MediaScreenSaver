@@ -104,23 +104,23 @@
             </group>
             <path
                 android:name="rect20"
-                android:pathData="M 110.241 490.602 L 403.864 490.602"
+                android:pathData="M 110.241 464.602 L 403.864 464.602"
                 android:strokeColor="#ffffff"
                 android:strokeWidth="10.0"
                 android:strokeLineCap="round"/>
             <group android:name="rect21_transform">
                 <path
                     android:name="path16"
-                    android:pathData="M 110.241 490.602 L 403.864 490.602"
+                    android:pathData="M 110.241 464.602 L 403.864 464.602"
+                    android:trimPathEnd="0.25"
                     android:strokeColor="#38bdf8"
                     android:strokeWidth="10.0"
-                    android:trimPathEnd="0.25"
                     android:strokeLineCap="round"/>
             </group>
             <group android:name="circle21_transform">
                 <path
                     android:name="circle21"
-                    android:pathData="M 188.886 482.382 C 186.765 482.382 184.729 483.226 183.229 484.725 C 181.729 486.225 180.886 488.261 180.886 490.382 C 180.886 492.503 181.729 494.539 183.229 496.039 C 184.729 497.539 186.765 498.382 188.886 498.382 C 191.007 498.382 193.043 497.539 194.543 496.039 C 196.043 494.539 196.886 492.503 196.886 490.382 C 196.886 488.261 196.043 486.225 194.543 484.725 C 193.043 483.226 191.007 482.382 188.886 482.382 Z"
+                    android:pathData="M 186.886 456.382 C 184.765 456.382 182.729 457.226 181.229 458.725 C 179.729 460.225 178.886 462.261 178.886 464.382 C 178.886 466.503 179.729 468.539 181.229 470.039 C 182.729 471.539 184.765 472.382 186.886 472.382 C 189.007 472.382 191.043 471.539 192.543 470.039 C 194.043 468.539 194.886 466.503 194.886 464.382 C 194.886 462.261 194.043 460.225 192.543 458.725 C 191.043 457.226 189.007 456.382 186.886 456.382 Z"
                     android:fillColor="#ffffff"
                     android:strokeWidth="1"/>
             </group>

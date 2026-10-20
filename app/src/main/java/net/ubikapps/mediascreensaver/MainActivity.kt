@@ -2,7 +2,6 @@ package net.ubikapps.mediascreensaver
 
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.ImageView
@@ -10,29 +9,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,25 +27,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.vectordrawable.graphics.drawable.SeekableAnimatedVectorDrawable
 import net.ubikapps.mediascreensaver.daydream.MediaScreenSaverService
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import net.ubikapps.mediascreensaver.ui.compose.ExceptionBottomSheet
 import net.ubikapps.mediascreensaver.ui.screens.HelpScreen
-import net.ubikapps.mediascreensaver.ui.compose.PrivacyPolicyLink
+import net.ubikapps.mediascreensaver.ui.screens.ReadyScreen
+import net.ubikapps.mediascreensaver.ui.screens.SetupNotificationScreen
+import net.ubikapps.mediascreensaver.ui.screens.SetupScreenSaverScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -146,12 +129,14 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
             }
 
             val pagerState = rememberPagerState(
-                initialPage = if (hasPermission) 1 else 0,
-                pageCount = { 2 }
+                initialPage = if (hasPermission && isOurScreenSaverSet(context)) 2 else if (hasPermission) 1 else 0,
+                pageCount = { 3 }
             )
 
             LaunchedEffect(hasPermission) {
-                if (hasPermission) {
+                if(hasPermission && isOurScreenSaverSet(context)){
+                    pagerState.animateScrollToPage(2)
+                } else if (hasPermission) {
                     pagerState.animateScrollToPage(1)
                 } else {
                     pagerState.animateScrollToPage(0)
@@ -178,7 +163,8 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
                         },
                         update = { imageView ->
                             imageView.translationY = -statusBarHeightPx
-                            val progress = (pagerState.currentPage + pagerState.currentPageOffsetFraction).coerceIn(0f, 1f)
+                            val maxPage = (pagerState.pageCount - 1).coerceAtLeast(1).toFloat()
+                            val progress = ((pagerState.currentPage + pagerState.currentPageOffsetFraction) / maxPage).coerceIn(0f, 1f)
                             val totalDuration = seekableAvd?.totalDuration ?: 1000L
                             val targetPlayTime = (progress * totalDuration).toLong().coerceIn(0L, totalDuration)
                             seekableAvd?.currentPlayTime = targetPlayTime
@@ -217,25 +203,12 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
                             .background(MaterialTheme.colorScheme.background)
                     ) {
                         when (page) {
-                            0 -> SetupScreen(onError = { errorMessageResId = it })
-                            1 -> ReadyScreen(onError = { errorMessageResId = it })
+                            0 -> SetupNotificationScreen(onError = { errorMessageResId = it })
+                            1 -> SetupScreenSaverScreen(onError = { errorMessageResId = it })
+                            2 -> ReadyScreen(onError = { errorMessageResId = it }, onMoreInfoClick = { showHelpScreen = true  })
                         }
                     }
                 }
-            }
-
-            IconButton(
-                onClick = { showHelpScreen = true },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .statusBarsPadding()
-                    .padding(end = 8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_help),
-                    contentDescription = stringResource(R.string.help),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
             }
         }
     }
@@ -248,142 +221,7 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-fun ReadyScreen(
-    modifier: Modifier = Modifier,
-    onError: (Int) -> Unit = {}
-) {
-    val context = LocalContext.current
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .navigationBarsPadding()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = if(isOurScreenSaverSet(context)) stringResource(R.string.screen_saver_ready) else stringResource(R.string.nearly_there),
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = if(isOurScreenSaverSet(context)) stringResource(R.string.done_description) else stringResource(R.string.ready_description),
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp),
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = {
-            try {
-                context.startActivity(Intent(Settings.ACTION_DREAM_SETTINGS))
-            } catch (_: Exception) {
-                onError(R.string.error_unable_to_open_screen_saver_settings)
-            }
-        }) {
-            Text(stringResource(R.string.open_screen_saver_settings))
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        PrivacyPolicyLink(context, onError)
-    }
-}
 
-@Composable
-fun SetupScreen(
-    modifier: Modifier = Modifier,
-    onError: (Int) -> Unit = {}
-) {
-    val context = LocalContext.current
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .navigationBarsPadding()
-            .verticalScroll(scrollState)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = stringResource(R.string.notification_access_required),
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.permission_instructions),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                try {
-                    context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                } catch (_: Exception) {
-                    onError(R.string.error_unable_to_open_notification_settings)
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.agree_and_open_notification_settings))
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.prominent_disclosure),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Text(
-                    text = stringResource(R.string.prominent_disclosure_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Text(
-                    text = stringResource(R.string.prominent_disclosure_data_accessed),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Text(
-                    text = stringResource(R.string.prominent_disclosure_privacy_safety),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PrivacyPolicyLink(context, onError)
-
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
