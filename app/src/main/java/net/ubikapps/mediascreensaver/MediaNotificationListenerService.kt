@@ -3,6 +3,7 @@ package net.ubikapps.mediascreensaver
 import android.app.Notification
 import android.content.ComponentName
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -36,11 +37,6 @@ class MediaNotificationListenerService : NotificationListenerService() {
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
         isConnected = false
-        try {
-            requestRebind(ComponentName(this, MediaNotificationListenerService::class.java))
-        } catch (e: Throwable) {
-            Log.e(TAG, "Failed to request rebind in onListenerDisconnected", e)
-        }
     }
 
     private fun updateNotifications() {
@@ -92,11 +88,28 @@ class MediaNotificationListenerService : NotificationListenerService() {
         val notifications: StateFlow<List<NotificationInfo>> = _notifications.asStateFlow()
 
         fun ensureRebound(context: Context) {
+            if (isConnected) return
             try {
-                requestRebind(ComponentName(context, MediaNotificationListenerService::class.java))
+                toggleComponent(context)
             } catch (e: Throwable) {
-                Log.e(TAG, "Failed to request rebind", e)
+                Log.e(TAG, "Failed to rebind notification listener service", e)
             }
+        }
+
+        private fun toggleComponent(context: Context) {
+            val componentName = ComponentName(context, MediaNotificationListenerService::class.java)
+            val pm = context.packageManager
+            pm.setComponentEnabledSetting(
+                componentName,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP
+            )
+            pm.setComponentEnabledSetting(
+                componentName,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
         }
     }
 }
+
