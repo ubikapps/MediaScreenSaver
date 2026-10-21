@@ -21,10 +21,12 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -34,7 +36,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.vectordrawable.graphics.drawable.SeekableAnimatedVectorDrawable
+import kotlinx.coroutines.launch
 import net.ubikapps.mediascreensaver.daydream.MediaScreenSaverService
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import net.ubikapps.mediascreensaver.ui.compose.ExceptionBottomSheet
@@ -124,6 +130,8 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
     } else {
         Box(modifier = modifier.fillMaxSize()) {
             val context = LocalContext.current
+            val lifecycleOwner = LocalLifecycleOwner.current
+            val coroutineScope = rememberCoroutineScope()
             val seekableAvd = remember(context) {
                 SeekableAnimatedVectorDrawable.create(context, R.drawable.pager_background)
             }
@@ -132,6 +140,22 @@ fun MainContent(hasPermission: Boolean, modifier: Modifier = Modifier) {
                 initialPage = if (hasPermission && isOurScreenSaverSet(context)) 2 else if (hasPermission) 1 else 0,
                 pageCount = { 3 }
             )
+
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        if (pagerState.currentPage == 1 && isOurScreenSaverSet(context)) {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(2)
+                            }
+                        }
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
 
             LaunchedEffect(hasPermission) {
                 if(hasPermission && isOurScreenSaverSet(context)){
