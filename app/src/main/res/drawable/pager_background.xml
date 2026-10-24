@@ -1,0 +1,234 @@
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="1024dp"
+            android:height="768dp"
+            android:viewportWidth="1024"
+            android:viewportHeight="768">
+            <group android:name="rect9_transform">
+                <path
+                    android:name="rect9"
+                    android:pathData="M 0 0 L 1024 0 L 1024 512 L 0 512 Z"
+                    android:strokeWidth="1">
+                    <aapt:attr name="android:fillColor">
+                        <gradient
+                            android:startX="0"
+                            android:endX="1024"
+                            android:type="linear">
+                            <item
+                                android:color="#0F172A"
+                                android:offset="0.0" />
+                            <item
+                                android:color="#38bdf8"
+                                android:offset="1.0" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+            </group>
+            <group android:name="earth"
+                android:pivotX="256"
+                android:pivotY="512">
+                <group android:name="playtreenight">
+                    <path
+                        android:name="rect18"
+                        android:pathData="M 109.906 280.655 C 112.711 285.517 125.972 308.722 127.339 311.027 C 129.473 314.622 107.327 276.184 109.906 280.655 Z"
+                        android:strokeColor="#818cf8"
+                        android:strokeWidth="5"/>
+                    <path
+                        android:name="path14"
+                        android:pathData="M 95.416 254.365 L 121.416 270.365 L 95.416 286.365 Z"
+                        android:fillColor="#ffffff"
+                        android:strokeColor="#ffffff"
+                        android:strokeWidth="4"
+                        android:strokeLineJoin="round"/>
+                </group>
+                <group
+                    android:name="playtreeday"
+                    android:pivotX="256"
+                    android:pivotY="512"
+                    android:rotation="-10">
+                    <path
+                        android:name="rect18_71"
+                        android:pathData="M 406.205 746.76 C 403.4 741.898 390.139 718.693 388.771 716.388 C 386.638 712.793 408.784 751.231 406.205 746.76 Z"
+                        android:strokeColor="#f472b6"
+                        android:strokeWidth="5"/>
+                    <path
+                        android:name="path14_1"
+                        android:pathData="M 420.695 773.05 L 394.695 757.05 L 420.695 741.05 Z"
+                        android:fillColor="#005522"
+                        android:strokeColor="#005522"
+                        android:strokeWidth="4"
+                        android:strokeLineJoin="round"/>
+                </group>
+                <path
+                    android:name="circle10"
+                    android:pathData="M 256 768 C 323.869 768 389.028 741.01 437.019 693.019 C 485.01 645.028 512 579.869 512 512 C 512 444.131 485.01 378.972 437.019 330.981 C 389.028 282.99 323.869 256 256 256 C 188.131 256 122.972 282.99 74.981 330.981 C 26.99 378.972 0 444.131 0 512 C 0 579.869 26.99 645.028 74.981 693.019 C 122.972 741.01 188.131 768 256 768 Z"
+                    android:strokeWidth="2.56188">
+                    <aapt:attr name="android:fillColor">
+                        <gradient
+                            android:startY="256"
+                            android:endY="768"
+                            android:type="linear">
+                            <item
+                                android:color="#162d50"
+                                android:offset="0.0" />
+                            <item
+                                android:color="#5fd35f"
+                                android:offset="1.0" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+
+
+            </group>
+            <group android:name="moon">
+                <path
+                    android:name="path10"
+                    android:pathData="M 380 110 C 366.529 109.699 353.406 114.358 343.141 123.087 C 332.877 131.815 326.169 144.019 324.301 157.363 C 322.434 170.707 325.534 184.284 333.008 195.495 C 340.482 206.706 351.822 214.789 364.858 218.197 C 377.894 221.606 391.738 220.108 403.743 213.99 C 415.749 207.872 425.097 197.55 430 185 C 422.083 190.315 412.679 192.982 403.15 192.615 C 393.622 192.249 384.451 188.868 376.964 182.961 C 369.478 177.055 364.056 168.922 361.483 159.74 C 358.91 150.558 359.317 140.792 362.644 131.855 C 365.97 122.919 372.049 115.264 380 110 Z"
+                    android:strokeWidth="1">
+                    <aapt:attr name="android:fillColor">
+                        <gradient
+                            android:startX="380"
+                            android:startY="110"
+                            android:endX="430"
+                            android:endY="185"
+                            android:type="linear">
+                            <item
+                                android:color="#FFF472B6"
+                                android:offset="0.0" />
+                            <item
+                                android:color="#FFC084FC"
+                                android:offset="1.0" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+            </group>
+            <path
+                android:name="rect20"
+                android:pathData="M 110.241 464.602 L 403.864 464.602"
+                android:strokeColor="#ffffff"
+                android:strokeWidth="10.0"
+                android:strokeLineCap="round"/>
+            <group android:name="rect21_transform">
+                <path
+                    android:name="path16"
+                    android:pathData="M 110.241 464.602 L 403.864 464.602"
+                    android:trimPathEnd="0.25"
+                    android:strokeColor="#38bdf8"
+                    android:strokeWidth="10.0"
+                    android:strokeLineCap="round"/>
+            </group>
+            <group android:name="circle21_transform">
+                <path
+                    android:name="circle21"
+                    android:pathData="M 186.886 456.382 C 184.765 456.382 182.729 457.226 181.229 458.725 C 179.729 460.225 178.886 462.261 178.886 464.382 C 178.886 466.503 179.729 468.539 181.229 470.039 C 182.729 471.539 184.765 472.382 186.886 472.382 C 189.007 472.382 191.043 471.539 192.543 470.039 C 194.043 468.539 194.886 466.503 194.886 464.382 C 194.886 462.261 194.043 460.225 192.543 458.725 C 191.043 457.226 189.007 456.382 186.886 456.382 Z"
+                    android:fillColor="#ffffff"
+                    android:strokeWidth="1"/>
+            </group>
+            <group android:name="sun">
+                <path
+                    android:name="circle14"
+                    android:pathData="M 898.636 90.821 C 882.791 90.821 867.578 97.122 856.374 108.327 C 845.17 119.531 838.868 134.743 838.868 150.589 C 838.868 166.434 845.17 181.646 856.374 192.851 C 867.578 204.055 882.791 210.356 898.636 210.356 C 914.481 210.356 929.693 204.055 940.898 192.851 C 952.102 181.646 958.403 166.434 958.403 150.589 C 958.403 134.743 952.102 119.531 940.898 108.327 C 929.693 97.122 914.481 90.821 898.636 90.821 Z"
+                    android:fillColor="#fbbf24"
+                    android:strokeColor="#ffffff"
+                    android:strokeWidth="7.172091006"/>
+            </group>
+            <group
+                android:name="group"
+                android:pivotX="512"
+                android:pivotY="384">
+                <path
+                    android:name="path13"
+                    android:pathData="M 38.284 131.004 C 37.952 127.396 38.717 123.769 40.478 120.603 C 42.24 117.436 44.917 114.873 48.159 113.253 C 51.4 111.632 55.056 111.027 58.647 111.518 C 62.237 112.009 65.597 113.573 68.284 116.004 C 71.893 112.188 76.613 109.605 81.772 108.622 C 86.931 107.639 92.271 108.307 97.029 110.529 C 101.787 112.751 105.727 116.418 108.284 121.004 C 112.354 121.688 116.067 123.752 118.797 126.846 C 121.527 129.94 123.112 133.881 123.284 138.004 L 43.284 138.004 Z"
+                    android:fillColor="#ffffff"
+                    android:strokeWidth="1"/>
+                <path
+                    android:name="path12"
+                    android:pathData="M 85.304 128.289 C 85.304 122.069 87.625 116.068 91.81 111.467 C 95.996 106.866 101.751 103.988 107.943 103.401 C 114.135 102.813 120.328 104.557 125.304 108.289 C 130.019 101.662 136.9 96.882 144.755 94.775 C 152.611 92.669 160.96 93.364 168.358 96.742 C 175.756 100.12 181.751 105.973 185.304 113.289 C 191.035 114.457 196.177 117.6 199.831 122.167 C 203.485 126.734 205.422 132.441 205.304 138.289 L 85.304 138.289 Z"
+                    android:fillColor="#ffffff"
+                    android:strokeWidth="1"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="rect9_transform">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateX"
+                android:duration="1000"
+                android:valueFrom="0"
+                android:valueTo="-512"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        </aapt:attr>
+    </target>
+    <target android:name="sun">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateX"
+                android:startOffset="1"
+                android:duration="999"
+                android:valueFrom="0"
+                android:valueTo="-512"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/anticipate_overshoot"/>
+        </aapt:attr>
+    </target>
+    <target android:name="path16">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="trimPathEnd"
+                android:duration="1000"
+                android:valueFrom="0.25"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        </aapt:attr>
+    </target>
+    <target android:name="circle21_transform">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateX"
+                android:duration="1000"
+                android:valueFrom="0"
+                android:valueTo="215"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        </aapt:attr>
+    </target>
+    <target android:name="moon">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateX"
+                android:duration="1000"
+                android:valueFrom="0"
+                android:valueTo="-512"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/anticipate_overshoot"/>
+        </aapt:attr>
+    </target>
+    <target android:name="group">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateX"
+                android:duration="1000"
+                android:valueFrom="0"
+                android:valueTo="-300"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        </aapt:attr>
+    </target>
+    <target android:name="earth">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="rotation"
+                android:duration="1000"
+                android:valueFrom="0"
+                android:valueTo="-180"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        </aapt:attr>
+    </target>
+</animated-vector>

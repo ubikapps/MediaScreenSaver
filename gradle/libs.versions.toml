@@ -1,6 +1,6 @@
 [versions]
 agp = "9.4.1"
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 coreKtx = "1.19.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -9,6 +9,7 @@ lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 composeBom = "2026.09.00"
 accompanist = "0.37.3"
+vectordrawableSeekable = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -26,6 +27,7 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 accompanist-drawablepainter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist" }
+androidx-vectordrawable-seekable = { group = "androidx.vectordrawable", name = "vectordrawable-seekable", version.ref = "vectordrawableSeekable" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

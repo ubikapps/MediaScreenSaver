@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -32,6 +37,9 @@
                 <action android:name="android.service.dreams.DreamService" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <meta-data
+                android:name="android.service.dream"
+                android:resource="@xml/screensaver_info" />
         </service>
 
         <service android:name=".MediaNotificationListenerService"

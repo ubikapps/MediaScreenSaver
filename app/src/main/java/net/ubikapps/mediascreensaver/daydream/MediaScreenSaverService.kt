@@ -41,7 +41,10 @@ class MediaScreenSaverService : DreamService(), LifecycleOwner, SavedStateRegist
             setViewTreeLifecycleOwner(this@MediaScreenSaverService)
             setViewTreeSavedStateRegistryOwner(this@MediaScreenSaverService)
             setContent {
-                MediaScreenSaverTheme {
+                MediaScreenSaverTheme(
+                    darkTheme = true,
+                    hideNavigationBars = true
+                ) {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         containerColor = Color.Black

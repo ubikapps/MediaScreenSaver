@@ -12,6 +12,7 @@ import android.media.session.PlaybackState
 import android.os.SystemClock
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,18 +48,25 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import net.ubikapps.mediascreensaver.MediaNotificationListenerService
+import net.ubikapps.mediascreensaver.R
 import net.ubikapps.mediascreensaver.daydream.TAG
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
 import kotlin.random.Random
 
 @Composable
-fun ScreenSaverContent(modifier: Modifier = Modifier) {
+fun ScreenSaverContent(
+    modifier: Modifier = Modifier,
+    showMedia: Boolean = true
+) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val context = LocalContext.current
@@ -66,23 +74,14 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
 
     // --- State Hoisting ---
 
-    // Dummy data for preview
-    val dummyBitmap = remember(isPreview) {
-        if (isPreview) {
-            Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888).apply {
-                eraseColor(android.graphics.Color.GRAY)
-            }
-        } else null
-    }
 
-    var mediaMetadata by remember(isPreview) { mutableStateOf(
-        if (isPreview) {
-            MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_TITLE, "Preview Title")
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, "Preview Artist")
-                .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, dummyBitmap)
+    var mediaMetadata by remember(isPreview, showMedia) { mutableStateOf(
+        if (isPreview && showMedia) {
+            val builder = MediaMetadata.Builder()
+                .putString(MediaMetadata.METADATA_KEY_TITLE, "Song Title")
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, "Artist Name")
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, 180000L)
-                .build()
+            builder.build()
         } else null
     ) }
 
@@ -101,7 +100,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
         if (isPreview) return@DisposableEffect onDispose {}
 
         val mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-        val componentName = ComponentName(context, "net.ubikapps.mediascreensaver.MediaNotificationListenerService")
+        val componentName = ComponentName(context, MediaNotificationListenerService::class.java)
 
         val callback = object : MediaController.Callback() {
             override fun onPlaybackStateChanged(state: PlaybackState?) {
@@ -132,11 +131,14 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
         }
 
         try {
+            MediaNotificationListenerService.ensureRebound(context)
             val initialSessions = mediaSessionManager.getActiveSessions(componentName)
             updateController(initialSessions)
             mediaSessionManager.addOnActiveSessionsChangedListener(sessionListener, componentName)
         } catch (e: SecurityException) {
-            Log.e(TAG, "permision not granted: $e")
+            Log.e(TAG, "permission not granted: $e")
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to initialize active media sessions: $e")
         }
 
         onDispose {
@@ -179,23 +181,12 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
         }
     }
 
-    // --- UI Layout ---
-
     Box(
         modifier = modifier
             .fillMaxSize()
             .offset { burnInOffset },
         contentAlignment = Alignment.Center
     ) {
-        // Battery Status at the top
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            StatusBar()
-        }
-
         if (mediaMetadata == null) {
             // Standby Mode: Just the Clock
             Column(
@@ -205,7 +196,14 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.displayCutout)
             ) {
-                DigitalClock()
+                StatusBar()
+                AutosizeDigitalClock()
+                Text(
+                    text = stringResource(R.string.no_media_session),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.LightGray,
+                    textAlign = TextAlign.Start
+                )
             }
         } else {
             // Media Mode
@@ -221,42 +219,39 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.displayCutout)
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    if (albumArt != null) {
-                        val matrix = ColorMatrix()
-                        matrix.setToSaturation(0f)
-
-                        Image(
-                            bitmap = albumArt.asImageBitmap(),
-                            contentDescription = "Album Art",
-                            modifier = Modifier.size(240.dp),
-                            colorFilter = ColorFilter.colorMatrix(matrix)
-                        )
-                        Spacer(modifier = Modifier.width(32.dp))
-                    }
+                    AlbumArt(albumArt, Modifier.size(256.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        DigitalClock(fontSize = 48.sp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth().padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceEvenly) {
+                            StatusBar()
+                            DigitalClock(fontSize = 48.sp)
+                        }
 
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
                             Text(
                                 text = title,
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = Color.White,
-                                textAlign = TextAlign.Start
+                                textAlign = TextAlign.Center
                             )
                             Text(
                                 text = artist,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color.LightGray,
-                                textAlign = TextAlign.Start
+                                textAlign = TextAlign.Center
                             )
                         }
 
@@ -274,7 +269,7 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                             PlaybackProgressBar(
                                 playbackState,
                                 duration,
-                                Modifier.fillMaxWidth(0.9f).align(Alignment.CenterHorizontally)
+                                Modifier.fillMaxWidth(0.95f).align(Alignment.CenterHorizontally)
                             )
                         }
                     }
@@ -287,26 +282,17 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.displayCutout)
-                        .padding(32.dp)
+                        .padding(16.dp)
                 ) {
+                    StatusBar()
                     DigitalClock(fontSize = 80.sp)
 
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    if (albumArt != null) {
-                        val matrix = ColorMatrix()
-                        matrix.setToSaturation(0f)
-
-                        Image(
-                            bitmap = albumArt.asImageBitmap(),
-                            contentDescription = "Album Art",
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            colorFilter = ColorFilter.colorMatrix(matrix)
-                        )
-                    }
+                    AlbumArt(albumArt, modifier = Modifier
+                        .aspectRatio(1f)
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp))
 
                     Text(
                         text = title,
@@ -323,12 +309,6 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (duration > 0) {
-                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth())
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
                     MediaControls(
                         playbackState = playbackState,
                         onPlayPause = { onPlayPause() },
@@ -338,6 +318,12 @@ fun ScreenSaverContent(modifier: Modifier = Modifier) {
                         onRewind30 = { onRewind30() },
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    if (duration > 0) {
+                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth(0.95f))
+                    }
+
                 }
             }
         }
@@ -358,6 +344,7 @@ fun ScreenSaverPortraitPreview() {
     }
 }
 
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview(name = "Landscape", showBackground = true, device = "spec:width=720dp,height=360dp,orientation=landscape")
 @Composable
@@ -368,6 +355,35 @@ fun ScreenSaverLandscapePreview() {
             containerColor = Color.Black
         ) { _ ->
             ScreenSaverContent()
+        }
+    }
+}
+
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Preview(name = "Portrait", showBackground = true, widthDp = 360, heightDp = 720)
+@Composable
+fun ClockPortraitPreview() {
+    MediaScreenSaverTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black
+        ) { _ ->
+            ScreenSaverContent(showMedia = false)
+        }
+    }
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Preview(name = "Landscape", showBackground = true, device = "spec:width=720dp,height=360dp,orientation=landscape")
+@Composable
+fun ClockLandscapePreview(){
+    MediaScreenSaverTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black
+        ) {  _ ->
+            ScreenSaverContent(showMedia = false)
         }
     }
 }

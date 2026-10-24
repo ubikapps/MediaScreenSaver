@@ -1,3 +1,30 @@
 <resources>
     <string name="app_name">MediaScreenSaver</string>
+    <string name="nearly_there">Nearly there</string>
+    <string name="screen_saver_ready">Screen Saver Ready</string>
+    <string name="ready_description">Permission granted. You can now select this app as your screen saver in system settings.</string>
+    <string name="done_description">Permission granted and Screen saver set. Well done!</string>
+    <string name="open_screen_saver_settings">Open Screen Saver Settings</string>
+    <string name="notification_access_required">Notification Access Required</string>
+    <string name="prominent_disclosure">Prominent Disclosure</string>
+    <string name="prominent_disclosure_description">To display active media sessions, notification icons and counts on your screensaver, MediaScreenSaver requires Notification Access.</string>
+    <string name="prominent_disclosure_data_accessed">Data Accessed &amp; Used:\n• App icons and package names of active notifications\n• Active notification counts\n• Media session information</string>
+    <string name="prominent_disclosure_privacy_safety">Privacy &amp; Safety:\n• Notification text and message contents are NEVER read, stored, or processed.\n• All data is processed locally on your device in real-time.\n• NO notification data is ever collected or transmitted off your device as this app does not have permission to access the internet.</string>
+    <string name="view_privacy_policy">View Privacy Policy</string>
+    <string name="permission_instructions">In the settings find \"MediaScreenSaver\" and click on \""Allow notification access\"</string>
+    <string name="agree_and_open_notification_settings">Agree &amp; Open Notification Settings</string>
+    <string name="no_media_session">No media session</string>
+    <string name="album_art">Album Art</string>
+    <string name="error_title">Error</string>
+    <string name="error_unable_to_open_screen_saver_settings">Unable to open screen saver settings on this device.</string>
+    <string name="error_unable_to_open_privacy_policy">Unable to open the privacy policy web page.</string>
+    <string name="error_unable_to_open_notification_settings">Unable to open notification listener settings on this device.</string>
+    <string name="error_dismiss">OK</string>
+    <string name="help">Help</string>
+    <string name="help_title">Help &amp; About</string>
+    <string name="help_description">MediaScreenSaver is a screen saver for Android that displays information and playback controls for your currently playing media, along with a digital clock, battery charge level, notification icons and counts while your device is charging or docked.\n\nNotes:\n• When previewing the screen saver on some devices the preview can only be closed by pressing the power button.\n• If the device is in a mode like Bedtime mode the screen saver may not display\n\nThis app is open source (see below)</string>
+    <string name="github_repository">GitHub Repository</string>
+    <string name="website">Website: ubikapps.dev</string>
+    <string name="error_unable_to_open_url">Unable to open link on this device.</string>
+    <string name="more_info">More Info</string>
 </resources>
