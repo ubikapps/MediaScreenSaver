@@ -9,6 +9,8 @@ import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -47,6 +50,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.vectordrawable.graphics.drawable.SeekableAnimatedVectorDrawable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.ubikapps.mediascreensaver.daydream.MediaScreenSaverService
 import net.ubikapps.mediascreensaver.ui.theme.MediaScreenSaverTheme
@@ -159,7 +163,7 @@ fun MainContent(
                     if (event == Lifecycle.Event.ON_RESUME) {
                         if (pagerState.currentPage == 1 && isOurScreenSaverSet(context)) {
                             coroutineScope.launch {
-                                pagerState.animateScrollToPage(2)
+                                scrollPage(pagerState, 2)
                             }
                         }
                     }
@@ -172,11 +176,11 @@ fun MainContent(
 
             LaunchedEffect(hasPermission) {
                 if (hasPermission && isOurScreenSaverSet(context)) {
-                    pagerState.animateScrollToPage(2)
+                    scrollPage(pagerState, 2)
                 } else if (hasPermission) {
-                    pagerState.animateScrollToPage(1)
+                    scrollPage(pagerState,1)
                 } else {
-                    pagerState.animateScrollToPage(0)
+                    scrollPage(pagerState,0)
                 }
             }
 
@@ -311,13 +315,20 @@ fun MainContent(
     }
 }
 
+suspend fun scrollPage(pagerState: PagerState, page: Int) {
+    delay(300L)
+    pagerState.animateScrollToPage(page, animationSpec = tween(
+        durationMillis = 900, // triple the default
+        easing = FastOutSlowInEasing
+    ))
+}
 
 
 @Preview(showBackground = true)
 @Composable
 fun MainContentPreview() {
     MediaScreenSaverTheme {
-        MainContent(false,)
+        MainContent(false)
     }
 }
 
