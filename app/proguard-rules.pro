@@ -19,3 +19,21 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep the VectorDrawable animation groups/paths so reflection continues to work
+-keepclassmembers class android.support.graphics.drawable.VectorDrawableCompat$* {
+    void set*(***);
+    *** get*();
+}
+
+# AndroidX VectorDrawableCompat methods
+-keepclassmembers class androidx.vectordrawable.graphics.drawable.VectorDrawableCompat$* {
+    void set*(***);
+    *** get*();
+}
+
+# Keep internal SDK vector group methods from being stripped or renamed
+-keepclassmembers class android.graphics.drawable.VectorDrawable$* {
+    void set*(***);
+    *** get*();
+}
