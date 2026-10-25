@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# Git pre-push hook to run unit tests before pushing.
+# If any tests fail, the push is blocked.
+
+echo "=========================================="
+echo " Running unit tests before git push...   "
+echo "=========================================="
+
+# Resolve project root directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -d "$SCRIPT_DIR/../../.git" ]; then
+    PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+elif [ -d "$SCRIPT_DIR/../.git" ]; then
+    PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+    PROJECT_ROOT="$(pwd)"
+fi
+
+cd "$PROJECT_ROOT" || exit 1
+
+# Detect Windows environment
+is_windows=0
+case "$(uname -s 2>/dev/null)" in
+    CYGWIN*|MINGW*|MSYS*|Windows_NT*) is_windows=1 ;;
+esac
+if [ -n "$COMSPEC" ] || [ "$OS" = "Windows_NT" ]; then
+    is_windows=1
+fi
+
+if [ "$is_windows" -eq 1 ]; then
+    echo "Running tests via Windows Command Prompt (gradlew.bat)..."
+    cmd.exe /c gradlew.bat test
+    status=$?
+elif [ -f "./gradlew" ]; then
+    echo "Running tests via Gradle wrapper (gradlew)..."
+    ./gradlew test
+    status=$?
+else
+    echo "Error: gradlew wrapper not found in $PROJECT_ROOT"
+    exit 1
+fi
+
+if [ $status -ne 0 ]; then
+    echo "=========================================="
+    echo " Error: Unit tests failed!               "
+    echo " Push blocked. Fix tests before pushing. "
+    echo "=========================================="
+    exit 1
+fi
+
+echo "=========================================="
+echo " Unit tests passed successfully!          "
+echo " Proceeding with push.                    "
+echo "=========================================="
+exit 0
