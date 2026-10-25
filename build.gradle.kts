@@ -4,3 +4,11 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
 }
+
+tasks.register<Copy>("installGitHooks") {
+    description = "Copies git hooks from .githooks to .git/hooks"
+    group = "git hooks"
+    from(file(".githooks"))
+    into(file(".git/hooks"))
+    onlyIf { file(".git").exists() }
+}
