@@ -20,12 +20,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
@@ -246,17 +246,22 @@ fun ScreenSaverContent(
             val duration = mediaMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
 
             if (isLandscape) {
-                // Landscape Layout: Art Left (2x size), Details Right (Time included)
+                // Landscape Layout: Art Left (dynamic height), Details Right (Time included)
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxSize()
                         .windowInsetsPadding(WindowInsets.displayCutout)
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    AlbumArt(albumArt, Modifier.size(256.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
+                    AlbumArt(
+                        albumArt = albumArt,
+                        modifier = Modifier
+                            .fillMaxHeight(0.75f)
+                            .aspectRatio(1f)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
 
                     Column(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -381,6 +386,20 @@ fun ScreenSaverPortraitPreview() {
 @Preview(name = "Landscape", showBackground = true, device = "spec:width=720dp,height=360dp,orientation=landscape")
 @Composable
 fun ScreenSaverLandscapePreview() {
+    MediaScreenSaverTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black
+        ) { _ ->
+            ScreenSaverContent()
+        }
+    }
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Preview(name = "Tablet Landscape", showBackground = true, device = "spec:width=1280dp,height=800dp,orientation=landscape")
+@Composable
+fun ScreenSaverTabletLandscapePreview() {
     MediaScreenSaverTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
