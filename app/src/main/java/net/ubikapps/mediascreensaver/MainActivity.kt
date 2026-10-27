@@ -332,6 +332,14 @@ fun MainContentPreview() {
     }
 }
 
+@Preview(showBackground = true, device = "spec:width=720dp,height=360dp,orientation=landscape")
+@Composable
+fun MainContentLandscapePreview() {
+    MediaScreenSaverTheme {
+        MainContent(false)
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable

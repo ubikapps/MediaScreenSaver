@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.flow.MutableStateFlow
 import net.ubikapps.mediascreensaver.NotificationInfo
@@ -57,7 +58,9 @@ fun StatusBar(modifier: Modifier = Modifier) {
             override fun onReceive(context: Context, intent: Intent) {
                 val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
                 val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-                batteryLevel = (level * 100 / scale.toFloat()).toInt()
+                if (level != -1 && scale > 0) {
+                    batteryLevel = (level * 100 / scale.toFloat()).toInt()
+                }
 
                 val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
                 isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
@@ -65,10 +68,29 @@ fun StatusBar(modifier: Modifier = Modifier) {
             }
         }
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        context.registerReceiver(receiver, filter)
+        val initialIntent = ContextCompat.registerReceiver(
+            context,
+            receiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        if (initialIntent != null) {
+            val level = initialIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale = initialIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+            if (level != -1 && scale > 0) {
+                batteryLevel = (level * 100 / scale.toFloat()).toInt()
+            }
+            val status = initialIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL
+        }
 
         onDispose {
-            context.unregisterReceiver(receiver)
+            try {
+                context.unregisterReceiver(receiver)
+            } catch (_: IllegalArgumentException) {
+                // Ignore if already unregistered
+            }
         }
     }
 
