@@ -5,14 +5,13 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.SystemClock
 import android.util.Log
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,20 +41,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ubikapps.mediascreensaver.MediaNotificationListenerService
 import net.ubikapps.mediascreensaver.R
 import net.ubikapps.mediascreensaver.daydream.TAG
@@ -121,31 +122,46 @@ fun ScreenSaverContent(
                 currentController?.unregisterCallback(callback)
                 currentController = active
                 currentController?.registerCallback(callback)
-                playbackState = currentController?.playbackState
-                mediaMetadata = currentController?.metadata
             }
+            playbackState = active?.playbackState
+            mediaMetadata = active?.metadata
         }
 
         val sessionListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
             updateController(controllers ?: emptyList())
         }
 
-        try {
-            MediaNotificationListenerService.ensureRebound(context)
-            val initialSessions = mediaSessionManager.getActiveSessions(componentName)
-            updateController(initialSessions)
-            mediaSessionManager.addOnActiveSessionsChangedListener(sessionListener, componentName)
-        } catch (e: SecurityException) {
-            Log.e(TAG, "permission not granted: $e")
-        } catch (e: Throwable) {
-            Log.e(TAG, "Failed to initialize active media sessions: $e")
+        var isListenerAdded = false
+
+        val scope = CoroutineScope(Dispatchers.Main)
+        val initJob = scope.launch {
+            var attempts = 0
+            while (isActive && !isListenerAdded && attempts < 10) {
+                try {
+                    MediaNotificationListenerService.ensureRebound(context)
+                    val initialSessions = mediaSessionManager.getActiveSessions(componentName)
+                    updateController(initialSessions)
+                    mediaSessionManager.addOnActiveSessionsChangedListener(sessionListener, componentName)
+                    isListenerAdded = true
+                } catch (e: SecurityException) {
+                    Log.w(TAG, "Notification listener not connected yet, retrying... (attempt ${attempts + 1}): ${e.message}")
+                    attempts++
+                    delay(500)
+                } catch (e: Throwable) {
+                    Log.e(TAG, "Failed to initialize active media sessions", e)
+                    break
+                }
+            }
         }
 
         onDispose {
+            initJob.cancel()
             try {
-                mediaSessionManager.removeOnActiveSessionsChangedListener(sessionListener)
+                if (isListenerAdded) {
+                    mediaSessionManager.removeOnActiveSessionsChangedListener(sessionListener)
+                }
                 currentController?.unregisterCallback(callback)
-            } catch (e: Exception) { }
+            } catch (_: Exception) { }
         }
     }
 
@@ -209,8 +225,24 @@ fun ScreenSaverContent(
             // Media Mode
             val title = mediaMetadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Unknown Title"
             val artist = mediaMetadata?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Unknown Artist"
-            val albumArt = mediaMetadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
+            val directAlbumArt = mediaMetadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
                 ?: mediaMetadata?.getBitmap(MediaMetadata.METADATA_KEY_ART)
+            val artUriString = remember(mediaMetadata) {
+                mediaMetadata?.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI)
+                    ?: mediaMetadata?.getString(MediaMetadata.METADATA_KEY_ART_URI)
+            }
+
+            var uriAlbumArt by remember { mutableStateOf<Bitmap?>(null) }
+
+            LaunchedEffect(artUriString, directAlbumArt) {
+                uriAlbumArt = if (directAlbumArt != null || artUriString.isNullOrBlank()) {
+                    null
+                } else {
+                    loadBitmapFromUri(context, artUriString)
+                }
+            }
+
+            val albumArt = directAlbumArt ?: uriAlbumArt
             val duration = mediaMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
 
             if (isLandscape) {
@@ -384,6 +416,24 @@ fun ClockLandscapePreview(){
             containerColor = Color.Black
         ) {  _ ->
             ScreenSaverContent(showMedia = false)
+        }
+    }
+}
+
+private suspend fun loadBitmapFromUri(context: Context, uriString: String): Bitmap? {
+    return withContext(Dispatchers.IO) {
+        try {
+            val uri = uriString.toUri()
+            if (uri.scheme == "http" || uri.scheme == "https") {
+                Log.d(TAG, "Skipping web album art URI (app is offline-only): $uriString")
+                return@withContext null
+            }
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                BitmapFactory.decodeStream(inputStream)
+            }
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to load album art from local URI: $uriString", e)
+            null
         }
     }
 }
