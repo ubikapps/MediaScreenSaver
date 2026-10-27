@@ -7,6 +7,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -23,6 +24,7 @@ const val TAG = "MediaScreenSaverService"
 class MediaScreenSaverService : DreamService(), LifecycleOwner, SavedStateRegistryOwner {
 
     private lateinit var savedStateRegistryController: SavedStateRegistryController
+    private var composeView: ComposeView? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -37,7 +39,8 @@ class MediaScreenSaverService : DreamService(), LifecycleOwner, SavedStateRegist
         isInteractive = true
         isFullscreen = true
 
-        setContentView(ComposeView(this).apply {
+        val view = ComposeView(this).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(this@MediaScreenSaverService))
             setViewTreeLifecycleOwner(this@MediaScreenSaverService)
             setViewTreeSavedStateRegistryOwner(this@MediaScreenSaverService)
             setContent {
@@ -53,22 +56,45 @@ class MediaScreenSaverService : DreamService(), LifecycleOwner, SavedStateRegist
                     }
                 }
             }
-        })
+        }
+        composeView = view
+        setContentView(view)
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        destroyLifecycleAndDisposeComposition()
+    }
+
+    override fun onDestroy() {
+        destroyLifecycleAndDisposeComposition()
+        super.onDestroy()
     }
 
     override fun onDreamingStarted() {
         super.onDreamingStarted()
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
     }
 
     override fun onDreamingStopped() {
         super.onDreamingStopped()
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+    }
+
+    private fun destroyLifecycleAndDisposeComposition() {
+        composeView?.disposeComposition()
+        composeView = null
+        if (lifecycle.currentState != Lifecycle.State.DESTROYED) {
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+            }
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+            }
+            lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        }
     }
 
     override val lifecycle: Lifecycle
