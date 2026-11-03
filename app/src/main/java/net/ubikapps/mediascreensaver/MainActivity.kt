@@ -12,6 +12,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,6 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
@@ -157,7 +160,6 @@ fun MainContent(
                 initialPage = if (hasPermission && isOurScreenSaverSet(context)) 2 else if (hasPermission) 1 else 0,
                 pageCount = { 3 }
             )
-
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) {
@@ -190,6 +192,35 @@ fun MainContent(
                         modifier = Modifier
                             .fillMaxHeight()
                             .aspectRatio(1f)
+                            .pointerInput(pagerState) {
+                                var totalDrag = 0f
+                                detectHorizontalDragGestures(
+                                    onDragStart = { totalDrag = 0f },
+                                    onDragEnd = {
+                                        coroutineScope.launch {
+                                            val threshold = size.width * 0.15f
+                                            val targetPage = when {
+                                                totalDrag < -threshold -> (pagerState.currentPage + 1).coerceAtMost(pagerState.pageCount - 1)
+                                                totalDrag > threshold -> (pagerState.currentPage - 1).coerceAtLeast(0)
+                                                else -> pagerState.settledPage
+                                            }
+                                            pagerState.animateScrollToPage(targetPage)
+                                        }
+                                    },
+                                    onDragCancel = {
+                                        coroutineScope.launch {
+                                            pagerState.animateScrollToPage(pagerState.settledPage)
+                                        }
+                                    },
+                                    onHorizontalDrag = { change, dragAmount ->
+                                        change.consume()
+                                        totalDrag += dragAmount
+                                        coroutineScope.launch {
+                                            pagerState.scrollBy(-dragAmount)
+                                        }
+                                    }
+                                )
+                            }
                     ) {
                         AndroidView(
                             factory = { ctx ->
