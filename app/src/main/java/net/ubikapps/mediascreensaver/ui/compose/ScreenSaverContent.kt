@@ -12,6 +12,7 @@ import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.SystemClock
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,7 +67,8 @@ import kotlin.random.Random
 @Composable
 fun ScreenSaverContent(
     modifier: Modifier = Modifier,
-    showMedia: Boolean = true
+    showMedia: Boolean = true,
+    onExitScreenSaver: () -> Unit = {}
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -200,6 +202,11 @@ fun ScreenSaverContent(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                onClick = onExitScreenSaver
+            )
             .offset { burnInOffset },
         contentAlignment = Alignment.Center
     ) {

@@ -52,7 +52,9 @@ class MediaScreenSaverService : DreamService(), LifecycleOwner, SavedStateRegist
                         modifier = Modifier.fillMaxSize(),
                         containerColor = Color.Black
                     ) { _ ->
-                        ScreenSaverContent()
+                        ScreenSaverContent(
+                            onExitScreenSaver = { finish() }
+                        )
                     }
                 }
             }
