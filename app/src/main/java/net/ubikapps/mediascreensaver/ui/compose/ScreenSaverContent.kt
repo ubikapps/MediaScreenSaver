@@ -323,9 +323,10 @@ fun ScreenSaverContent(
 
                         if (duration > 0) {
                             PlaybackProgressBar(
-                                playbackState,
-                                duration,
-                                Modifier.fillMaxWidth(0.95f).align(Alignment.CenterHorizontally)
+                                playbackState = playbackState,
+                                duration = duration,
+                                modifier = Modifier.fillMaxWidth(0.95f).align(Alignment.CenterHorizontally),
+                                onSeek = { targetPos -> transportControls?.seekTo(targetPos) }
                             )
                         }
                     }
@@ -377,7 +378,12 @@ fun ScreenSaverContent(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     if (duration > 0) {
-                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth(0.95f))
+                        PlaybackProgressBar(
+                            playbackState = playbackState,
+                            duration = duration,
+                            modifier = Modifier.fillMaxWidth(0.95f),
+                            onSeek = { targetPos -> transportControls?.seekTo(targetPos) }
+                        )
                     }
 
                 }
