@@ -26,15 +26,9 @@ fun PlaybackProgressBar(playbackState: PlaybackState?, duration: Long, modifier:
 
     LaunchedEffect(playbackState, duration) {
         while (true) {
-            if (playbackState != null && playbackState.state == PlaybackState.STATE_PLAYING) {
-                val timeDiff = SystemClock.elapsedRealtime() - playbackState.lastPositionUpdateTime
-                val calculatedPos = playbackState.position + (timeDiff * playbackState.playbackSpeed).toLong()
-                currentPosition = calculatedPos.coerceIn(0L, duration)
-                progress = (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
-            } else if (playbackState != null) {
-                currentPosition = playbackState.position.coerceIn(0L, duration)
-                progress = (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
-            }
+            val calculatedPos = calculateCurrentPlaybackPosition(playbackState)
+            currentPosition = calculatedPos.coerceIn(0L, if (duration > 0) duration else Long.MAX_VALUE)
+            progress = if (duration > 0) (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f) else 0f
             delay(1000)
         }
     }
@@ -68,4 +62,34 @@ fun formatTime(ms: Long): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "%02d:%02d".format(minutes, seconds)
+}
+
+fun calculateCurrentPlaybackPosition(
+    playbackState: PlaybackState?,
+    currentSystemTime: Long = SystemClock.elapsedRealtime()
+): Long {
+    if (playbackState == null) return 0L
+    return calculatePlaybackPosition(
+        state = playbackState.state,
+        lastPosition = playbackState.position,
+        lastPositionUpdateTime = playbackState.lastPositionUpdateTime,
+        playbackSpeed = playbackState.playbackSpeed,
+        currentSystemTime = currentSystemTime
+    )
+}
+
+fun calculatePlaybackPosition(
+    state: Int,
+    lastPosition: Long,
+    lastPositionUpdateTime: Long,
+    playbackSpeed: Float,
+    currentSystemTime: Long
+): Long {
+    return if (state == PlaybackState.STATE_PLAYING && lastPositionUpdateTime > 0L) {
+        val timeDiff = (currentSystemTime - lastPositionUpdateTime).coerceAtLeast(0L)
+        val calculatedPos = lastPosition + (timeDiff * playbackSpeed).toLong()
+        calculatedPos.coerceAtLeast(0L)
+    } else {
+        lastPosition.coerceAtLeast(0L)
+    }
 }
