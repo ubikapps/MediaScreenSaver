@@ -60,7 +60,13 @@ class MediaControlCalculationTest {
         val playbackSpeed = 1.0f
         val duration = 180000L // 3m
 
-        val calculatedPos = lastStatePosition + (timeDiffMs * playbackSpeed).toLong()
+        val calculatedPos = net.ubikapps.mediascreensaver.ui.compose.calculatePlaybackPosition(
+            state = android.media.session.PlaybackState.STATE_PLAYING,
+            lastPosition = lastStatePosition,
+            lastPositionUpdateTime = 1000L,
+            playbackSpeed = playbackSpeed,
+            currentSystemTime = 1000L + timeDiffMs
+        )
         val clampedPos = calculatedPos.coerceIn(0L, duration)
 
         assertEquals(65000L, clampedPos)
@@ -73,10 +79,55 @@ class MediaControlCalculationTest {
         val playbackSpeed = 2.0f // 2x speed
         val duration = 180000L
 
-        val calculatedPos = lastStatePosition + (timeDiffMs * playbackSpeed).toLong()
+        val calculatedPos = net.ubikapps.mediascreensaver.ui.compose.calculatePlaybackPosition(
+            state = android.media.session.PlaybackState.STATE_PLAYING,
+            lastPosition = lastStatePosition,
+            lastPositionUpdateTime = 1000L,
+            playbackSpeed = playbackSpeed,
+            currentSystemTime = 1000L + timeDiffMs
+        )
         val clampedPos = calculatedPos.coerceIn(0L, duration)
 
         assertEquals(50000L, clampedPos)
+    }
+
+    @Test
+    fun playbackStatePositionCalculation_whenPaused_doesNotAdvance() {
+        val lastStatePosition = 60000L
+        val calculatedPos = net.ubikapps.mediascreensaver.ui.compose.calculatePlaybackPosition(
+            state = android.media.session.PlaybackState.STATE_PAUSED,
+            lastPosition = lastStatePosition,
+            lastPositionUpdateTime = 1000L,
+            playbackSpeed = 1.0f,
+            currentSystemTime = 10000L
+        )
+        assertEquals(60000L, calculatedPos)
+    }
+
+    @Test
+    fun skipForwardWithStalePosition_wouldSkipBackwards_whereasCalculatedPositionAdvances() {
+        // Reproduce Pocket Casts scenario:
+        // Playback started at 2 min (120,000ms), 5 minutes (300,000ms) have elapsed since.
+        val stalePosition = 120000L
+        val lastUpdateTime = 10000L
+        val currentTime = lastUpdateTime + 300000L // 5 mins later
+        val currentActualPlaybackPos = 420000L // 7 minutes in
+
+        // Old buggy behavior: adding 30s to stale position:
+        val buggyTarget = stalePosition + 30000L // 150,000ms (2.5 min)
+        assertTrue("Buggy target is behind actual playback position!", buggyTarget < currentActualPlaybackPos)
+
+        // Fixed behavior: calculate up-to-date position
+        val calculatedPos = net.ubikapps.mediascreensaver.ui.compose.calculatePlaybackPosition(
+            state = android.media.session.PlaybackState.STATE_PLAYING,
+            lastPosition = stalePosition,
+            lastPositionUpdateTime = lastUpdateTime,
+            playbackSpeed = 1.0f,
+            currentSystemTime = currentTime
+        )
+        val fixedTarget = calculatedPos + 30000L
+        assertEquals(450000L, fixedTarget)
+        assertTrue("Fixed target advances ahead of current playback position!", fixedTarget > currentActualPlaybackPos)
     }
 
     @Test

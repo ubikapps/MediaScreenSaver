@@ -3,7 +3,6 @@ package net.ubikapps.mediascreensaver
 import android.app.Notification
 import android.content.ComponentName
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -90,25 +89,11 @@ class MediaNotificationListenerService : NotificationListenerService() {
         fun ensureRebound(context: Context) {
             if (isConnected) return
             try {
-                toggleComponent(context)
+                val componentName = ComponentName(context, MediaNotificationListenerService::class.java)
+                requestRebind(componentName)
             } catch (e: Throwable) {
                 Log.e(TAG, "Failed to rebind notification listener service", e)
             }
-        }
-
-        private fun toggleComponent(context: Context) {
-            val componentName = ComponentName(context, MediaNotificationListenerService::class.java)
-            val pm = context.packageManager
-            pm.setComponentEnabledSetting(
-                componentName,
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP
-            )
-            pm.setComponentEnabledSetting(
-                componentName,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP
-            )
         }
     }
 }

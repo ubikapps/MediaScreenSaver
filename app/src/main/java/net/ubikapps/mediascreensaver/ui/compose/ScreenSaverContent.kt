@@ -178,12 +178,24 @@ fun ScreenSaverContent(
     val onSkipNext = { transportControls?.skipToNext() }
     val onSkipPrevious = { transportControls?.skipToPrevious() }
     val onForward30 = {
-        val pos = playbackState?.position ?: 0L
-        transportControls?.seekTo(pos + 30000)
+        val actions = playbackState?.actions ?: 0L
+        if ((actions and PlaybackState.ACTION_FAST_FORWARD) != 0L) {
+            transportControls?.fastForward()
+        } else {
+            val currentPos = calculateCurrentPlaybackPosition(playbackState)
+            val duration = mediaMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+            val targetPos = if (duration > 0L) (currentPos + 30000L).coerceAtMost(duration) else currentPos + 30000L
+            transportControls?.seekTo(targetPos)
+        }
     }
     val onRewind30 = {
-        val pos = playbackState?.position ?: 0L
-        transportControls?.seekTo((pos - 30000).coerceAtLeast(0L))
+        val actions = playbackState?.actions ?: 0L
+        if ((actions and PlaybackState.ACTION_REWIND) != 0L) {
+            transportControls?.rewind()
+        } else {
+            val currentPos = calculateCurrentPlaybackPosition(playbackState)
+            transportControls?.seekTo((currentPos - 30000L).coerceAtLeast(0L))
+        }
     }
 
     // Burn-in protection: Shift content every minute
@@ -311,9 +323,10 @@ fun ScreenSaverContent(
 
                         if (duration > 0) {
                             PlaybackProgressBar(
-                                playbackState,
-                                duration,
-                                Modifier.fillMaxWidth(0.95f).align(Alignment.CenterHorizontally)
+                                playbackState = playbackState,
+                                duration = duration,
+                                modifier = Modifier.fillMaxWidth(0.95f).align(Alignment.CenterHorizontally),
+                                onSeek = { targetPos -> transportControls?.seekTo(targetPos) }
                             )
                         }
                     }
@@ -365,7 +378,12 @@ fun ScreenSaverContent(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     if (duration > 0) {
-                        PlaybackProgressBar(playbackState, duration, Modifier.fillMaxWidth(0.95f))
+                        PlaybackProgressBar(
+                            playbackState = playbackState,
+                            duration = duration,
+                            modifier = Modifier.fillMaxWidth(0.95f),
+                            onSeek = { targetPos -> transportControls?.seekTo(targetPos) }
+                        )
                     }
 
                 }
